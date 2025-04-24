@@ -82,19 +82,21 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
             <Label htmlFor="line-height" className="text-right">
               Line Height
             </Label>
-            <Select 
-              value={settings.lineHeight} 
-              onValueChange={(value) => setSettings({ ...settings, lineHeight: value })}
-            >
-              <SelectTrigger id="line-height" className="col-span-3">
-                <SelectValue placeholder="Select line height" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="loose">Loose</SelectItem>
-                <SelectItem value="tight">Tight</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="col-span-3">
+              <Select 
+                value={settings.lineHeight} 
+                onValueChange={(value) => setSettings({ ...settings, lineHeight: value })}
+              >
+                <SelectTrigger id="line-height">
+                  <SelectValue placeholder="Select line height" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="loose">Loose</SelectItem>
+                  <SelectItem value="tight">Tight</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">

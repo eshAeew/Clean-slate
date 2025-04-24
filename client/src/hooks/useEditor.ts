@@ -151,10 +151,10 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     }
   };
 
-  const downloadContent = () => {
+  const downloadContent = (fileType: string = 'txt') => {
     if (!editorRef.current) return;
     const content = editorRef.current.getValue();
-    downloadTextFile(content);
+    downloadTextFile(content, fileType);
   };
 
   const newFile = () => {

@@ -38,8 +38,56 @@ export function generateTextStats(text: string): { lines: number; characters: nu
   };
 }
 
-export function downloadTextFile(content: string, filename = 'note.txt'): void {
-  const blob = new Blob([content], { type: 'text/plain' });
+export function downloadTextFile(content: string, fileType: string = 'txt'): void {
+  let mimeType = 'text/plain';
+  let fileContent = content;
+  let filename = `note.${fileType}`;
+  
+  // Convert content based on file type
+  switch (fileType) {
+    case 'txt':
+      mimeType = 'text/plain;charset=utf-8';
+      break;
+    case 'html':
+      mimeType = 'text/html;charset=utf-8';
+      fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Exported Note</title>
+</head>
+<body>
+  <pre>${content}</pre>
+</body>
+</html>`;
+      break;
+    case 'csv':
+      mimeType = 'text/csv;charset=utf-8';
+      // Simple conversion - each line becomes a CSV row
+      fileContent = content.split('\n').map(line => 
+        line.replace(/"/g, '""')  // Escape quotes
+      ).join('\n');
+      break;
+    case 'json':
+      mimeType = 'application/json;charset=utf-8';
+      try {
+        // Try to parse as JSON if it's valid JSON
+        JSON.parse(content);
+        fileContent = content;
+      } catch (e) {
+        // If it's not valid JSON, create a simple JSON object with the content
+        fileContent = JSON.stringify({ content: content });
+      }
+      break;
+    case 'md':
+      mimeType = 'text/markdown;charset=utf-8';
+      break;
+    default:
+      mimeType = 'text/plain;charset=utf-8';
+      filename = 'note.txt';
+  }
+  
+  const blob = new Blob([fileContent], { type: mimeType });
   const url = URL.createObjectURL(blob);
   
   const a = document.createElement('a');

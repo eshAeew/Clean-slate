@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import EditorStatusBar from "@/components/EditorStatusBar";
 import SettingsModal from "@/components/SettingsModal";
+import ExportDialog from "@/components/ExportDialog";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import useEditor from "@/hooks/useEditor";
 import Editor from "@monaco-editor/react";
@@ -11,6 +12,7 @@ import { DEFAULT_EDITOR_OPTIONS } from "@/lib/editorHelpers";
 const NotepadEditor = () => {
   const { toast } = useToast();
   const [showSettings, setShowSettings] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [editorOptions, setEditorOptions] = useState(DEFAULT_EDITOR_OPTIONS);
   
