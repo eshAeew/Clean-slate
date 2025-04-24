@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { editor as monacoEditor, Range, TrackedRangeStickiness } from 'monaco-editor';
+import { editor as monacoEditor, Range } from 'monaco-editor';
 import { generateTextStats, downloadTextFile } from '@/lib/editorHelpers';
 
 type EditorRef = monacoEditor.IStandaloneCodeEditor | null;
@@ -93,7 +93,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
           options: {
             inlineClassName: 'editor-bold',
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            stickiness: 2 // TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
           }
         });
       }
@@ -109,7 +109,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
             range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
             options: {
               inlineClassName: 'editor-italic',
-              stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+              stickiness: 2 // NeverGrowsWhenTypingAtEdges
             }
           });
         }
@@ -127,7 +127,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
           options: {
             inlineClassName: 'editor-link',
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+            stickiness: 2, // NeverGrowsWhenTypingAtEdges
             hoverMessage: { value: url }
           }
         });
@@ -143,7 +143,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
           options: {
             inlineClassName: 'editor-strikethrough',
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            stickiness: 2 // NeverGrowsWhenTypingAtEdges
           }
         });
       }
@@ -160,7 +160,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
           options: {
             inlineClassName: `editor-heading editor-h${level}`,
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            stickiness: 2 // NeverGrowsWhenTypingAtEdges
           }
         });
       }
@@ -175,7 +175,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
           options: {
             inlineClassName: 'editor-code',
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            stickiness: 2 // NeverGrowsWhenTypingAtEdges
           }
         });
       }
