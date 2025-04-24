@@ -114,14 +114,31 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
       
       {/* Font Settings */}
       <div className="ml-auto flex items-center space-x-3">
-        <Select defaultValue="mono" onValueChange={(value) => onFormat("fontFamily", value)}>
-          <SelectTrigger className="h-8 w-40">
+        <Select 
+          defaultValue="Consolas, Monaco, 'Courier New', monospace" 
+          onValueChange={(value) => onFormat("fontFamily", value)}
+        >
+          <SelectTrigger className="h-8 w-48">
             <SelectValue placeholder="Select font" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="mono">Consolas</SelectItem>
-            <SelectItem value="sans">System UI</SelectItem>
-            <SelectItem value="serif">Georgia</SelectItem>
+          <SelectContent className="max-h-60">
+            <SelectItem value="Consolas, Monaco, 'Courier New', monospace" style={{fontFamily: "Consolas, Monaco, 'Courier New', monospace"}}>Consolas</SelectItem>
+            <SelectItem value="Monaco, Consolas, 'Courier New', monospace" style={{fontFamily: "Monaco, Consolas, 'Courier New', monospace"}}>Monaco</SelectItem>
+            <SelectItem value="'Courier New', Courier, monospace" style={{fontFamily: "'Courier New', Courier, monospace"}}>Courier New</SelectItem>
+            <SelectItem value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" style={{fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"}}>System UI</SelectItem>
+            <SelectItem value="'Roboto Mono', monospace" style={{fontFamily: "'Roboto Mono', monospace"}}>Roboto Mono</SelectItem>
+            <SelectItem value="'Fira Code', monospace" style={{fontFamily: "'Fira Code', monospace"}}>Fira Code</SelectItem>
+            <SelectItem value="'JetBrains Mono', monospace" style={{fontFamily: "'JetBrains Mono', monospace"}}>JetBrains Mono</SelectItem>
+            <SelectItem value="'Source Code Pro', monospace" style={{fontFamily: "'Source Code Pro', monospace"}}>Source Code Pro</SelectItem>
+            <SelectItem value="Georgia, 'Times New Roman', serif" style={{fontFamily: "Georgia, 'Times New Roman', serif"}}>Georgia</SelectItem>
+            <SelectItem value="'Times New Roman', Times, serif" style={{fontFamily: "'Times New Roman', Times, serif"}}>Times New Roman</SelectItem>
+            
+            {/* Custom fonts will be added here dynamically */}
+            {JSON.parse(localStorage.getItem('custom-fonts') || '[]').map((font: any) => (
+              <SelectItem key={font.name} value={font.value} style={{fontFamily: font.name}}>
+                {font.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         

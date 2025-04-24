@@ -76,13 +76,31 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         editor.trigger('keyboard', 'redo', null);
         break;
       case 'cut':
-        document.execCommand('cut');
+        // First copy the text to clipboard
+        navigator.clipboard.writeText(selectedText).then(() => {
+          // Then delete the selected text
+          editor.executeEdits('', [
+            {
+              range: selection,
+              text: '',
+              forceMoveMarkers: true
+            }
+          ]);
+        }).catch(err => {
+          console.error('Failed to cut text: ', err);
+        });
         break;
       case 'copy':
-        document.execCommand('copy');
+        navigator.clipboard.writeText(selectedText).catch(err => {
+          console.error('Failed to copy text: ', err);
+        });
         break;
       case 'paste':
-        document.execCommand('paste');
+        navigator.clipboard.readText().then(text => {
+          editOperation(text);
+        }).catch(err => {
+          console.error('Failed to paste text: ', err);
+        });
         break;
       case 'selectAll':
         editor.setSelection(model.getFullModelRange());
@@ -96,13 +114,8 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         editor.updateOptions({ fontSize: value });
         break;
       case 'fontFamily':
-        let fontFamily = 'Consolas, Monaco, "Courier New", monospace';
-        if (value === 'sans') {
-          fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        } else if (value === 'serif') {
-          fontFamily = 'Georgia, "Times New Roman", serif';
-        }
-        editor.updateOptions({ fontFamily });
+        // We now receive the full fontFamily string directly 
+        editor.updateOptions({ fontFamily: value });
         break;
       case 'lineHeight':
         editor.updateOptions({ lineHeight: value });
