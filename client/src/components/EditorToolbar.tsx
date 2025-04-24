@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -11,8 +11,63 @@ interface EditorToolbarProps {
   onFormat: (action: string, value?: any) => void;
 }
 
+// List of built-in fonts - must match the fonts in SettingsModal
+const AVAILABLE_FONTS = [
+  { name: "Consolas", value: "Consolas, Monaco, 'Courier New', monospace" },
+  { name: "Monaco", value: "Monaco, Consolas, 'Courier New', monospace" },
+  { name: "Courier New", value: "'Courier New', Courier, monospace" },
+  { name: "System UI", value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
+  { name: "Roboto Mono", value: "'Roboto Mono', monospace" },
+  { name: "Fira Code", value: "'Fira Code', monospace" },
+  { name: "JetBrains Mono", value: "'JetBrains Mono', monospace" },
+  { name: "Source Code Pro", value: "'Source Code Pro', monospace" },
+  { name: "Georgia", value: "Georgia, 'Times New Roman', serif" }
+];
+
+interface CustomFont {
+  name: string;
+  value: string;
+  data: string;
+}
+
 const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
   const [fontSize, setFontSize] = useState<number>(14);
+  const [customFonts, setCustomFonts] = useState<CustomFont[]>([]);
+  const [currentFont, setCurrentFont] = useState<string>(AVAILABLE_FONTS[0].value);
+
+  // Load custom fonts from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('custom-fonts');
+      if (stored) {
+        setCustomFonts(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error("Error loading custom fonts:", e);
+    }
+
+    // Get the current editor options to initialize the fontSize
+    const editorOptions = localStorage.getItem('editor-options');
+    if (editorOptions) {
+      try {
+        const options = JSON.parse(editorOptions);
+        if (options.fontSize) {
+          setFontSize(options.fontSize);
+        }
+        if (options.fontFamily) {
+          setCurrentFont(options.fontFamily);
+        }
+      } catch (e) {
+        console.error("Error loading editor options:", e);
+      }
+    }
+  }, []);
+
+  // Handle font change
+  const handleFontChange = (value: string) => {
+    setCurrentFont(value);
+    onFormat("fontFamily", value);
+  };
 
   const handleFontSizeChange = (value: string) => {
     const size = parseInt(value);
@@ -22,15 +77,17 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
 
   const decreaseFontSize = () => {
     if (fontSize > 10) {
-      setFontSize(fontSize - 1);
-      onFormat("fontSize", fontSize - 1);
+      const newSize = fontSize - 1;
+      setFontSize(newSize);
+      onFormat("fontSize", newSize);
     }
   };
 
   const increaseFontSize = () => {
     if (fontSize < 24) {
-      setFontSize(fontSize + 1);
-      onFormat("fontSize", fontSize + 1);
+      const newSize = fontSize + 1;
+      setFontSize(newSize);
+      onFormat("fontSize", newSize);
     }
   };
 
@@ -115,8 +172,8 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
       {/* Font Settings */}
       <div className="ml-auto flex items-center space-x-3">
         <Select 
-          defaultValue="Consolas, Monaco, 'Courier New', monospace" 
-          onValueChange={(value) => onFormat("fontFamily", value)}
+          value={currentFont}
+          onValueChange={handleFontChange}
         >
           <SelectTrigger className="h-8 w-48">
             <SelectValue placeholder="Select font" />
