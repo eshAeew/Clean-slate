@@ -1,53 +1,64 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-import Header from "@/components/Header";
-import EditorStatusBar from "@/components/EditorStatusBar";
-import SettingsModal from "@/components/SettingsModal";
-import ExportDialog from "@/components/ExportDialog";
-import useLocalStorage from "@/hooks/useLocalStorage";
-import useEditor from "@/hooks/useEditor";
-import Editor from "@monaco-editor/react";
-import { DEFAULT_EDITOR_OPTIONS } from "@/lib/editorHelpers";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import Editor from '@monaco-editor/react';
+import { useToast } from '@/hooks/use-toast';
+import useEditor from '@/hooks/useEditor';
+import EditorToolbar from '@/components/EditorToolbar';
+import EditorStatusBar from '@/components/EditorStatusBar';
+import SettingsModal from '@/components/SettingsModal';
+import ExportDialog from '@/components/ExportDialog';
+import Header from '@/components/Header';
+import { 
+  Dialog, DialogContent, DialogDescription, 
+  DialogHeader, DialogTitle, DialogFooter 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const DEFAULT_EDITOR_OPTIONS = {
+  minimap: { enabled: true },
+  wordWrap: 'on' as const,
+  lineNumbers: 'on' as const,
+  theme: 'vs-light',
+  fontSize: 14,
+  fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+  lineHeight: 1.5,
+};
 
 const NotepadEditor = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [editorOptions, setEditorOptions] = useState(DEFAULT_EDITOR_OPTIONS);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [editorOptions, setEditorOptions] = useState(DEFAULT_EDITOR_OPTIONS);
   
-  // Initialize with localStorage note content or default
-  const defaultContent = `// Welcome to SimpleNote
-
-This is a clean, distraction-free text editor for all your note-taking needs.
-
-Features:
-- Auto-saving as you type
-- Basic text formatting
-- Distraction-free writing environment
-- Line and character counting
-- Easy export options
-
-Try typing something to get started!
-
-function greet() {
-  console.log("Hello, world!");
-}
-
-greet();`;
-
-  // Default content (only used when creating a completely new note)
-  const [content, setContent] = useState<string>(defaultContent);
+  // Editor content state
+  const [content, setContent] = useState<string>('');
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   
-  // useLocation hook for navigation
-  const [, setLocation] = useLocation();
+  // State for the currently editing note
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveAsNew, setSaveAsNew] = useState(false);
+  const [saveData, setSaveData] = useState({
+    title: '',
+    folderId: null as number | null
+  });
+
+  // Initialize the editor with hooks
+  const { 
+    editorRef,
+    stats,
+    handleEditorDidMount,
+    handleContentChange,
+    handleSearch,
+    handleFormat,
+    downloadContent,
+    updateEditorValue
+  } = useEditor(content, setContent);
   
   // Custom format handler to support save operation
   const handleCustomAction = (action: string) => {
@@ -57,18 +68,8 @@ greet();`;
       handleFormat(action);
     }
   };
-  
-  const { 
-    editorRef,
-    stats,
-    handleEditorDidMount,
-    handleContentChange,
-    handleSearch,
-    handleFormat,
-    downloadContent,
-    newFile,
-  } = useEditor(content, setContent);
 
+  // Toggle full screen mode
   const toggleFullScreen = () => {
     const element = document.documentElement;
     if (!isFullScreen) {
@@ -83,9 +84,9 @@ greet();`;
     setIsFullScreen(!isFullScreen);
   };
 
+  // Handle editor options updates
   const updateEditorOptions = (options: typeof editorOptions) => {
     console.log('Received editor options:', options);
-    // Update the editor options
     setEditorOptions({
       ...editorOptions,
       ...options
@@ -97,7 +98,7 @@ greet();`;
     }
   };
 
-  // Listen for fullscreen changes
+  // Monitor fullscreen changes from other sources (like Esc key)
   useEffect(() => {
     const handleFullScreenChange = () => {
       setIsFullScreen(!!document.fullscreenElement);
@@ -109,33 +110,49 @@ greet();`;
     };
   }, []);
 
-  // State to track the currently editing note
-  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [saveAsNew, setSaveAsNew] = useState(false);
-  const [saveData, setSaveData] = useState({
-    title: '',
-    folderId: null as number | null
-  });
+  // Create a new file
+  const newFile = () => {
+    // Clear content
+    updateEditorValue('');
+    
+    // Reset state
+    setNoteTitle('Untitled Note');
+    setEditingNoteId(null);
+    setSaveData({
+      title: '',
+      folderId: null
+    });
+    
+    toast({
+      description: "New note created",
+      duration: 1500,
+    });
+  };
 
-  // Check for editing note from Notes page
+  // Load note from Notes page if any
   useEffect(() => {
     const editingNoteJson = localStorage.getItem('editingNote');
     if (editingNoteJson) {
       try {
         const editingNote = JSON.parse(editingNoteJson);
-        if (editingNote && editingNote.content) {
-          setContent(editingNote.content);
+        if (editingNote) {
+          // Update editor content
+          updateEditorValue(editingNote.content || '');
+          
+          // Update state
+          setContent(editingNote.content || '');
           setNoteTitle(editingNote.title || 'Untitled Note');
           setEditingNoteId(editingNote.id);
           setSaveData({
             title: editingNote.title || 'Untitled Note',
             folderId: editingNote.folderId
           });
+          
           toast({
             description: `Opened note: ${editingNote.title}`,
             duration: 2000,
           });
+          
           // Clear the editing note so refreshing doesn't re-open it
           localStorage.removeItem('editingNote');
         }
@@ -143,37 +160,71 @@ greet();`;
         console.error('Error parsing editing note', err);
       }
     }
-  }, [toast, setContent]);
-
-  // Auto-save notification
-  useEffect(() => {
-    const interval = setInterval(() => {
-      toast({
-        description: "Note auto-saved",
-        duration: 1500,
-      });
-    }, 60000); // Show notification every minute
-
-    return () => clearInterval(interval);
   }, [toast]);
+
+  // Function to handle saving a note
+  const handleSaveNote = () => {
+    const currentContent = editorRef.current?.getValue() || content;
+    
+    const savedNote = {
+      id: saveAsNew ? Date.now() : (editingNoteId || Date.now()),
+      title: saveData.title || 'Untitled Note',
+      content: currentContent,
+      folderId: saveData.folderId,
+      isArchived: false,
+      isTrashed: false,
+      isPinned: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Get existing notes from localStorage
+    const notesJson = localStorage.getItem('notes');
+    let notes = notesJson ? JSON.parse(notesJson) : [];
+
+    if (saveAsNew || !editingNoteId) {
+      // Add as new note
+      notes.push(savedNote);
+    } else {
+      // Update existing note
+      const noteIndex = notes.findIndex((note: any) => note.id === editingNoteId);
+      if (noteIndex >= 0) {
+        // Preserve createdAt from the original note
+        const originalCreatedAt = notes[noteIndex].createdAt;
+        notes[noteIndex] = {...savedNote, createdAt: originalCreatedAt};
+      } else {
+        // If not found (shouldn't happen), add as new
+        notes.push(savedNote);
+      }
+    }
+
+    // Save back to localStorage
+    localStorage.setItem('notes', JSON.stringify(notes));
+    
+    toast({
+      description: saveAsNew ? "Note saved as new" : "Note updated",
+      duration: 2000,
+    });
+    
+    // Close dialog
+    setSaveDialogOpen(false);
+    setSaveAsNew(false);
+    
+    // Update state
+    setEditingNoteId(saveAsNew ? savedNote.id : editingNoteId);
+    setNoteTitle(savedNote.title);
+    
+    // Navigate back to notes page
+    setTimeout(() => {
+      setLocation('/notes');
+    }, 1000);
+  };
 
   return (
     <div className="h-screen flex flex-col">
       <Header 
         onSettingsClick={() => setShowSettings(true)}
-        onNewFile={() => {
-          newFile();
-          setNoteTitle('Untitled Note');
-          setEditingNoteId(null);
-          setSaveData({
-            title: '',
-            folderId: null
-          });
-          toast({
-            description: "New note created",
-            duration: 1500,
-          });
-        }}
+        onNewFile={newFile}
         onDownload={() => setShowExportDialog(true)}
         onSearch={handleSearch}
         onFormat={handleCustomAction}
@@ -186,7 +237,7 @@ greet();`;
             <Editor
               height="100%"
               defaultLanguage="plaintext"
-              defaultValue={content}
+              value={content}
               onChange={handleContentChange}
               options={editorOptions}
               onMount={handleEditorDidMount}
@@ -282,57 +333,6 @@ greet();`;
       </Dialog>
     </div>
   );
-
-  // Function to handle saving a note
-  function handleSaveNote() {
-    const savedNote = {
-      id: saveAsNew ? Date.now() : (editingNoteId || Date.now()),
-      title: saveData.title || 'Untitled Note',
-      content: content,
-      folderId: saveData.folderId,
-      isArchived: false,
-      isTrashed: false,
-      isPinned: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Get existing notes from localStorage
-    const notesJson = localStorage.getItem('notes');
-    let notes = notesJson ? JSON.parse(notesJson) : [];
-
-    if (saveAsNew || !editingNoteId) {
-      // Add as new note
-      notes.push(savedNote);
-    } else {
-      // Update existing note
-      notes = notes.map((note: any) => 
-        note.id === editingNoteId ? {...savedNote, createdAt: note.createdAt} : note
-      );
-    }
-
-    // Save back to localStorage
-    localStorage.setItem('notes', JSON.stringify(notes));
-    
-    // Show success message
-    toast({
-      description: saveAsNew ? "Note saved as new" : "Note updated",
-      duration: 2000,
-    });
-    
-    // Close dialog
-    setSaveDialogOpen(false);
-    setSaveAsNew(false);
-    
-    // Update state
-    setEditingNoteId(saveAsNew ? savedNote.id : editingNoteId);
-    setNoteTitle(savedNote.title);
-    
-    // Navigate back to notes page
-    setTimeout(() => {
-      setLocation('/notes');
-    }, 1000);
-  }
 };
 
 export default NotepadEditor;

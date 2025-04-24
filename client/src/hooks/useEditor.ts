@@ -167,6 +167,14 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     // Clear the content state
     setContent('');
   };
+  
+  // Method to directly update the editor value
+  const updateEditorValue = (value: string) => {
+    if (editorRef.current) {
+      editorRef.current.setValue(value);
+    }
+    setContent(value);
+  };
 
   return {
     editorRef,
@@ -177,6 +185,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     handleFormat,
     downloadContent,
     newFile,
+    updateEditorValue,
   };
 };
 
