@@ -270,6 +270,44 @@ const NotesPage: React.FC = () => {
     })
   );
   
+  // Function to organize folders into a hierarchical structure
+  const organizeFoldersHierarchy = (foldersList: IFolder[]): IFolder[] => {
+    // Create a map for quick lookup
+    const folderMap = new Map<number, IFolder>();
+    
+    // First pass: Store all folders in the map
+    foldersList.forEach(folder => {
+      folderMap.set(folder.id, { ...folder, children: [] });
+    });
+    
+    // Second pass: Organize into tree structure
+    const rootFolders: IFolder[] = [];
+    
+    foldersList.forEach(folder => {
+      const currentFolder = folderMap.get(folder.id);
+      if (currentFolder) {
+        if (folder.parentId === null) {
+          // This is a root folder
+          rootFolders.push(currentFolder);
+        } else {
+          // This is a child folder
+          const parentFolder = folderMap.get(folder.parentId);
+          if (parentFolder) {
+            if (!parentFolder.children) {
+              parentFolder.children = [];
+            }
+            parentFolder.children.push(currentFolder);
+          } else {
+            // If parent not found, treat as root
+            rootFolders.push(currentFolder);
+          }
+        }
+      }
+    });
+    
+    return rootFolders;
+  };
+
   // Save to localStorage whenever data changes
   useEffect(() => {
     localStorage.setItem('folders', JSON.stringify(folders));
@@ -889,7 +927,7 @@ const NotesPage: React.FC = () => {
                   </div>
                   
                   <SortableContext items={folders.map(f => f.id.toString())} strategy={verticalListSortingStrategy}>
-                    {folders.map(folder => renderFolder(folder))}
+                    {organizeFoldersHierarchy(folders).map(folder => renderFolder(folder))}
                   </SortableContext>
                 </div>
                 
