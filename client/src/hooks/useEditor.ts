@@ -33,33 +33,63 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
       // Get the line content
       const lineContent = model.getLineContent(position.lineNumber);
       
-      // Check for patterns: **text** for bold and *text* for italic
-      // This is a simple implementation - in a production app, you'd use more sophisticated regex
+      // Process Markdown-style formatting
+      processMarkdownStyling(lineContent, position.lineNumber, model, editor);
+    }
+  };
+  
+  // Process markdown styling and apply decorations
+  const processMarkdownStyling = (
+    lineContent: string, 
+    lineNumber: number, 
+    model: monacoEditor.ITextModel, 
+    editor: monacoEditor.IStandaloneCodeEditor
+  ) => {
+    // Regular expressions for finding markdown patterns
+    const boldRegex = /\*\*([^*]+)\*\*/g;
+    const italicRegex = /(?<!\*)\*([^*]+)\*(?!\*)/g;
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    
+    // Find all matches for bold text
+    let boldMatch;
+    while ((boldMatch = boldRegex.exec(lineContent)) !== null) {
+      const startPos = boldMatch.index;
+      const endPos = startPos + boldMatch[0].length;
+      const range = new monacoEditor.Range(
+        lineNumber,
+        startPos + 1, // +1 because Monaco positions are 1-based
+        lineNumber,
+        endPos + 1
+      );
       
-      // Check for bold pattern completion
-      if (lineContent.includes('**') && lineContent.split('**').length > 2) {
-        const segments = lineContent.split('**');
-        for (let i = 0; i < segments.length - 1; i++) {
-          if (i % 2 === 0 && segments[i+1].trim() !== '') {
-            // Found a potential bold pattern
-            // In a real implementation, you would add styling or conversion here
-            // For now, we're just demonstrating the pattern detection
-            console.log('Bold pattern detected:', segments[i+1]);
-          }
-        }
-      }
+      // Log the detected pattern (in a production app, you would style this)
+      console.log('Bold text detected:', boldMatch[1]);
+    }
+    
+    // Find all matches for italic text
+    let italicMatch;
+    while ((italicMatch = italicRegex.exec(lineContent)) !== null) {
+      const startPos = italicMatch.index;
+      const endPos = startPos + italicMatch[0].length;
+      const range = new monacoEditor.Range(
+        lineNumber,
+        startPos + 1,
+        lineNumber,
+        endPos + 1
+      );
       
-      // Check for italic pattern completion
-      if (lineContent.includes('*') && lineContent.split('*').length > 2) {
-        const segments = lineContent.split('*');
-        for (let i = 0; i < segments.length - 1; i++) {
-          if (i % 2 === 0 && segments[i+1].trim() !== '' && !lineContent.includes('**')) {
-            // Found a potential italic pattern
-            // In a real implementation, you would add styling or conversion here
-            console.log('Italic pattern detected:', segments[i+1]);
-          }
-        }
-      }
+      // Log the detected pattern
+      console.log('Italic text detected:', italicMatch[1]);
+    }
+    
+    // Find all matches for links
+    let linkMatch;
+    while ((linkMatch = linkRegex.exec(lineContent)) !== null) {
+      const text = linkMatch[1];
+      const url = linkMatch[2];
+      
+      // Log the detected link
+      console.log('Link detected:', text, 'URL:', url);
     }
   };
 

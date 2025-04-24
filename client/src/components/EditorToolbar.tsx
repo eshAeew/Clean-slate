@@ -201,7 +201,10 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
           <DialogHeader>
             <DialogTitle>Add URL Link</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4" id="url-link-dialog-description">
+            <p className="text-sm text-muted-foreground mb-2">
+              Enter the URL you want to link to the selected text.
+            </p>
             <div className="grid grid-cols-4 items-center gap-4">
               <Input 
                 id="url" 
@@ -209,6 +212,7 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
                 onChange={(e) => setUrl(e.target.value)} 
                 className="col-span-4" 
                 placeholder="https://example.com" 
+                aria-describedby="url-link-dialog-description"
               />
             </div>
           </div>
