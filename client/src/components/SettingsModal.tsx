@@ -218,6 +218,69 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="font-family" className="text-right font-medium text-gray-700">
+              Font
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={settings.fontFamily} 
+                onValueChange={(value) => setSettings({ ...settings, fontFamily: value })}
+              >
+                <SelectTrigger id="font-family" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue placeholder="Select font" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <div className="p-2 flex justify-between items-center border-b">
+                    <span className="text-sm font-medium">System Fonts</span>
+                  </div>
+                  {AVAILABLE_FONTS.map(font => (
+                    <SelectItem key={font.name} value={font.value} style={{fontFamily: font.value}}>
+                      {font.name}
+                    </SelectItem>
+                  ))}
+                  
+                  {customFonts.length > 0 && (
+                    <>
+                      <div className="p-2 flex justify-between items-center border-b border-t">
+                        <span className="text-sm font-medium">Custom Fonts</span>
+                      </div>
+                      {customFonts.map(font => (
+                        <SelectItem key={font.name} value={font.value} style={{fontFamily: font.name}}>
+                          {font.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              
+              <div className="flex items-center mt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs flex items-center gap-1 mr-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload size={12} />
+                  Upload Font
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept=".woff,.woff2,.ttf,.otf"
+                  onChange={handleFontFileChange}
+                />
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <Info size={12} />
+                  Supports .woff, .woff2, .ttf, .otf
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="font-size" className="text-right font-medium text-gray-700">
               Font Size
             </Label>
