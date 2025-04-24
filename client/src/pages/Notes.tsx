@@ -522,23 +522,46 @@ const NotesPage: React.FC = () => {
     const { active, over } = event;
     setIsDragging(false);
     
+    // Log the drag operation
+    console.log('Drag end event:', { 
+      active: active, 
+      over: over,
+      activeId: active.id,
+      activeData: active.data.current,
+      overId: over?.id,
+      overData: over?.data.current
+    });
+    
     if (over && active.id !== over.id) {
-      const { id: activeId, type: activeType } = active.data.current as { id: number, type: string };
+      // Get active item info
+      const activeData = active.data.current as { id: number, type: string } | undefined;
+      if (!activeData) {
+        setActiveItem(null);
+        return;
+      }
       
-      if (!over.data.current) {
+      const { id: activeId, type: activeType } = activeData;
+      
+      // Get over item info
+      const overData = over.data.current as { id: number | null, type: string } | undefined;
+      if (!overData) {
         // No valid drop target
         setActiveItem(null);
         return;
       }
       
-      const { id: overId, type: overType } = over.data.current as { id: number, type: string };
+      const { id: overId, type: overType } = overData;
       
-      if (activeType === 'note' && overType === 'folder') {
-        // Move note to folder
-        moveNoteToFolder(activeId, overId);
-      } else if (activeType === 'note' && overType === 'all-notes') {
-        // Move note to root (no folder)
-        moveNoteToFolder(activeId, null);
+      console.log(`Moving ${activeType} (id: ${activeId}) to ${overType} (id: ${overId})`);
+      
+      if (activeType === 'note') {
+        if (overType === 'folder') {
+          // Move note to folder
+          moveNoteToFolder(activeId, overId as number);
+        } else if (overType === 'all-notes') {
+          // Move note to root (no folder)
+          moveNoteToFolder(activeId, null);
+        }
       }
     }
     
@@ -642,6 +665,20 @@ const NotesPage: React.FC = () => {
       }
     });
     
+    // Handler for clicking a note
+    const handleClick = (e: React.MouseEvent) => {
+      if (!isDragging) {
+        setSelectedNote(note.id);
+      }
+    };
+    
+    // Handler for double-clicking a note
+    const handleDoubleClick = (e: React.MouseEvent) => {
+      if (!isDragging) {
+        openNoteInEditor(note);
+      }
+    };
+    
     return (
       <ContextMenu>
         <ContextMenuTrigger>
@@ -654,8 +691,11 @@ const NotesPage: React.FC = () => {
               selectedNote === note.id && "ring-2 ring-blue-500",
               isDragging && "opacity-50"
             )}
-            onClick={() => setSelectedNote(note.id)}
-            onDoubleClick={() => openNoteInEditor(note)}
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            style={{
+              touchAction: 'none' // Prevents scrolling on touch devices
+            }}
           >
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
@@ -759,7 +799,7 @@ const NotesPage: React.FC = () => {
 
   // Render each folder and its subfolders recursively
   const renderFolder = (folder: IFolder, level = 0) => {
-    return <DroppableFolder folder={folder} level={level} />;
+    return <DroppableFolder key={folder.id} folder={folder} level={level} />;
   };
   
   return (
