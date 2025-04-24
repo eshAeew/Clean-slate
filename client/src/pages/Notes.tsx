@@ -229,6 +229,7 @@ const NotesPage: React.FC = () => {
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
   const [selectedLabel, setSelectedLabel] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [viewArchived, setViewArchived] = useState<boolean>(false);
   
   // Function to open a note in the editor
   const openNoteInEditor = (note: INote) => {
@@ -329,15 +330,15 @@ const NotesPage: React.FC = () => {
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       note.content.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filter by folder if selected
-    const matchesFolder = selectedFolder === null || note.folderId === selectedFolder;
+    // Filter by folder if selected (only in regular view, not in archive view)
+    const matchesFolder = viewArchived || selectedFolder === null || note.folderId === selectedFolder;
     
     // Filter by label if selected
     const matchesLabel = selectedLabel === null || 
       (note.labels && note.labels.some(label => label.id === selectedLabel));
     
-    // Don't show archived or trashed notes in normal view
-    const isVisible = !note.isArchived && !note.isTrashed;
+    // Show archived notes only in archive view, and don't show trashed notes
+    const isVisible = !note.isTrashed && (viewArchived ? note.isArchived : !note.isArchived);
     
     return matchesSearch && matchesFolder && matchesLabel && isVisible;
   });
@@ -525,10 +526,43 @@ const NotesPage: React.FC = () => {
   const archiveNote = (noteId: number) => {
     setNotes(prevNotes => 
       prevNotes.map(note => 
-        note.id === noteId ? { ...note, isArchived: true } : note
+        note.id === noteId ? { ...note, isArchived: true, updatedAt: new Date().toISOString() } : note
       )
     );
     toast({ description: "Note archived" });
+  };
+  
+  // Function to unarchive a note
+  const unarchiveNote = (noteId: number) => {
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, isArchived: false, updatedAt: new Date().toISOString() } : note
+      )
+    );
+    toast({ description: "Note restored from archive" });
+  };
+  
+  // Function to duplicate a note
+  const duplicateNote = (noteId: number) => {
+    const originalNote = notes.find(note => note.id === noteId);
+    
+    if (originalNote) {
+      const newNote: INote = {
+        id: Math.max(...notes.map(n => n.id), 0) + 1,
+        title: `${originalNote.title} (Copy)`,
+        content: originalNote.content,
+        folderId: originalNote.folderId,
+        isArchived: false,
+        isTrashed: false,
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        labels: originalNote.labels ? [...originalNote.labels] : []
+      };
+      
+      setNotes(prevNotes => [...prevNotes, newNote]);
+      toast({ description: "Note duplicated" });
+    }
   };
   
   // Function to toggle pin status
@@ -794,7 +828,7 @@ const NotesPage: React.FC = () => {
                       <File className="mr-2 h-4 w-4" />
                       <span>Open in Editor</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => duplicateNote(note.id)}>
                       <Copy className="mr-2 h-4 w-4" />
                       <span>Duplicate</span>
                     </DropdownMenuItem>
@@ -862,7 +896,7 @@ const NotesPage: React.FC = () => {
             <File className="mr-2 h-4 w-4" />
             <span>Open in Editor</span>
           </ContextMenuItem>
-          <ContextMenuItem>
+          <ContextMenuItem onClick={() => duplicateNote(note.id)}>
             <Copy className="mr-2 h-4 w-4" />
             <span>Duplicate</span>
           </ContextMenuItem>
