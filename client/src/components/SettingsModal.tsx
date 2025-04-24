@@ -18,7 +18,9 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
     fontSize: editorOptions.fontSize,
     wordWrap: editorOptions.wordWrap === 'on',
     theme: editorOptions.theme === 'vs-dark' ? 'dark' : 'light',
-    lineHeight: 'normal',
+    lineHeight: editorOptions.lineHeight ? 
+      (editorOptions.lineHeight >= 1.8 ? 'loose' : 
+       editorOptions.lineHeight <= 1.3 ? 'tight' : 'normal') : 'normal',
     autoSave: true,
     spellCheck: true,
   });
@@ -141,7 +143,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="word-wrap" className="text-right">
+            <Label htmlFor="word-wrap" className="text-right font-medium text-gray-700">
               Word wrap
             </Label>
             <div className="col-span-3 flex items-center space-x-2">
@@ -155,7 +157,12 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
         </div>
         
         <DialogFooter>
-          <Button onClick={handleSaveSettings}>Save changes</Button>
+          <Button 
+            onClick={handleSaveSettings} 
+            className="apple-button-primary rounded-full px-5 py-2"
+          >
+            Save changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

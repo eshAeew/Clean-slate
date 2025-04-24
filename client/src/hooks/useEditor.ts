@@ -104,6 +104,9 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         }
         editor.updateOptions({ fontFamily });
         break;
+      case 'lineHeight':
+        editor.updateOptions({ lineHeight: value });
+        break;
       case 'indent':
         editor.trigger('keyboard', 'tab', null);
         break;

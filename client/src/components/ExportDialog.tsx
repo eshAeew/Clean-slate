@@ -54,9 +54,9 @@ const ExportDialog = ({ isOpen, onClose, onExport }: ExportDialogProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] apple-dialog">
         <DialogHeader>
-          <DialogTitle>Export Note</DialogTitle>
+          <DialogTitle className="text-gray-800 font-medium text-xl">Export Note</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
@@ -68,15 +68,15 @@ const ExportDialog = ({ isOpen, onClose, onExport }: ExportDialogProps) => {
             {fileTypes.map((type) => (
               <div 
                 key={type.id} 
-                className="flex items-center space-x-3 rounded-md border p-3 cursor-pointer hover:bg-secondary"
+                className="flex items-center space-x-3 rounded-md border border-gray-200 p-3 cursor-pointer hover:bg-gray-50"
                 onClick={() => setSelectedFormat(type.id)}
               >
-                <RadioGroupItem value={type.id} id={`format-${type.id}`} />
+                <RadioGroupItem value={type.id} id={`format-${type.id}`} className="text-blue-500" />
                 <div className="flex flex-col">
-                  <Label htmlFor={`format-${type.id}`} className="font-medium cursor-pointer">
+                  <Label htmlFor={`format-${type.id}`} className="font-medium cursor-pointer text-gray-800">
                     {type.name}
                   </Label>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-gray-500">
                     {type.description}
                   </span>
                 </div>
@@ -86,10 +86,17 @@ const ExportDialog = ({ isOpen, onClose, onExport }: ExportDialogProps) => {
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            className="apple-button rounded-full px-5 py-2"
+          >
             Cancel
           </Button>
-          <Button onClick={handleExport}>
+          <Button 
+            onClick={handleExport}
+            className="apple-button-primary rounded-full px-5 py-2 ml-2"
+          >
             Export
           </Button>
         </DialogFooter>
