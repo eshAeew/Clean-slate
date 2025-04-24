@@ -267,6 +267,11 @@ const NotesPage: React.FC = () => {
   const [dialogType, setDialogType] = useState<DialogType>(null);
   const [dialogData, setDialogData] = useState<any>({});
   
+  // For delete confirmation dialog
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
+  const [confirmAction, setConfirmAction] = useState<() => void>(() => {});
+  const [confirmMessage, setConfirmMessage] = useState<string>("");
+  
   // Drag and drop state
   const [activeItem, setActiveItem] = useState<any>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -498,37 +503,59 @@ const NotesPage: React.FC = () => {
     setDialogData({});
   };
   
-  // Function to delete a label
-  const deleteLabel = (labelId: number) => {
+  // Function to show confirmation dialog and set the action
+  const showConfirmDialog = (message: string, action: () => void) => {
+    setConfirmMessage(message);
+    setConfirmAction(() => action);
+    setConfirmDialogOpen(true);
+  };
+  
+  // Function to prepare for label deletion
+  const deleteLabelWithConfirm = (labelId: number) => {
     // Check if any notes are using this label
     const notesWithLabel = notes.filter(note => 
       note.labels && note.labels.some(label => label.id === labelId)
     );
     
     if (notesWithLabel.length > 0) {
-      if (confirm(`This label is used in ${notesWithLabel.length} note(s). Deleting it will remove the label from these notes. Continue?`)) {
-        // Remove the label from all notes that use it
-        setNotes(prevNotes => 
-          prevNotes.map(note => {
-            if (note.labels && note.labels.some(label => label.id === labelId)) {
-              return {
-                ...note,
-                labels: note.labels.filter(label => label.id !== labelId),
-                updatedAt: new Date().toISOString()
-              };
-            }
-            return note;
-          })
-        );
-        
-        // Remove the label
-        setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
-        
-        toast({ 
-          description: "Label deleted and removed from notes",
-          duration: 3000
-        });
-      }
+      // Show confirmation dialog since this label is used in notes
+      showConfirmDialog(
+        `This label is used in ${notesWithLabel.length} note(s). Deleting it will remove the label from these notes.`,
+        () => deleteLabelAction(labelId, notesWithLabel.length > 0)
+      );
+    } else {
+      // Show simpler confirmation since no notes are affected
+      showConfirmDialog(
+        "Are you sure you want to delete this label?",
+        () => deleteLabelAction(labelId, false)
+      );
+    }
+  };
+  
+  // Actual label deletion logic
+  const deleteLabelAction = (labelId: number, hasNotes: boolean) => {
+    if (hasNotes) {
+      // Remove the label from all notes that use it
+      setNotes(prevNotes => 
+        prevNotes.map(note => {
+          if (note.labels && note.labels.some(label => label.id === labelId)) {
+            return {
+              ...note,
+              labels: note.labels.filter(label => label.id !== labelId),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return note;
+        })
+      );
+      
+      // Remove the label
+      setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
+      
+      toast({ 
+        description: "Label deleted and removed from notes",
+        duration: 3000
+      });
     } else {
       // Just delete the label as it's not used in any notes
       setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
@@ -1173,7 +1200,7 @@ const NotesPage: React.FC = () => {
                           className="h-6 w-6 p-0 text-red-500 ml-1 opacity-70 hover:opacity-100"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteLabel(label.id);
+                            deleteLabelWithConfirm(label.id);
                           }}
                         >
                           <Trash2 size={14} />
@@ -1422,6 +1449,34 @@ const NotesPage: React.FC = () => {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleDialogSubmit}>
               {dialogData.id ? 'Save Changes' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p>{confirmMessage}</p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                confirmAction();
+                setConfirmDialogOpen(false);
+              }}
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
