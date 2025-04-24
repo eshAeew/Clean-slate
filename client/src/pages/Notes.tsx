@@ -753,6 +753,7 @@ const NotesPage: React.FC = () => {
                           selectedNote === note.id && "ring-2 ring-blue-500"
                         )}
                         onClick={() => setSelectedNote(note.id)}
+                        onDoubleClick={() => openNoteInEditor(note)}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>

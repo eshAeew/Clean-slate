@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import EditorStatusBar from "@/components/EditorStatusBar";
 import SettingsModal from "@/components/SettingsModal";
@@ -8,6 +9,11 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import useEditor from "@/hooks/useEditor";
 import Editor from "@monaco-editor/react";
 import { DEFAULT_EDITOR_OPTIONS } from "@/lib/editorHelpers";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const NotepadEditor = () => {
   const { toast } = useToast();
@@ -39,6 +45,18 @@ greet();`;
   // Get stored note from the Notes page, if any
   const [content, setContent] = useLocalStorage('notepad-content', defaultContent);
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
+  
+  // useLocation hook for navigation
+  const [, setLocation] = useLocation();
+  
+  // Custom format handler to support save operation
+  const handleCustomAction = (action: string) => {
+    if (action === "save") {
+      setSaveDialogOpen(true);
+    } else {
+      handleFormat(action);
+    }
+  };
   
   const { 
     editorRef,
@@ -91,6 +109,15 @@ greet();`;
     };
   }, []);
 
+  // State to track the currently editing note
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveAsNew, setSaveAsNew] = useState(false);
+  const [saveData, setSaveData] = useState({
+    title: '',
+    folderId: null as number | null
+  });
+
   // Check for editing note from Notes page
   useEffect(() => {
     const editingNoteJson = localStorage.getItem('editingNote');
@@ -100,6 +127,11 @@ greet();`;
         if (editingNote && editingNote.content) {
           setContent(editingNote.content);
           setNoteTitle(editingNote.title || 'Untitled Note');
+          setEditingNoteId(editingNote.id);
+          setSaveData({
+            title: editingNote.title || 'Untitled Note',
+            folderId: editingNote.folderId
+          });
           toast({
             description: `Opened note: ${editingNote.title}`,
             duration: 2000,
@@ -132,7 +164,7 @@ greet();`;
         onNewFile={newFile}
         onDownload={() => setShowExportDialog(true)}
         onSearch={handleSearch}
-        onFormat={handleFormat}
+        onFormat={handleCustomAction}
         title={noteTitle}
       />
       
@@ -172,8 +204,123 @@ greet();`;
         onClose={() => setShowExportDialog(false)}
         onExport={(fileType) => downloadContent(fileType)}
       />
+
+      {/* Save Note Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{saveAsNew ? 'Save as New Note' : 'Save Note'}</DialogTitle>
+            <DialogDescription>
+              {saveAsNew 
+                ? 'Enter a title and select a folder to save your note.' 
+                : 'Update the existing note or save as a new note.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Note Title</Label>
+              <Input
+                id="title"
+                value={saveData.title}
+                onChange={(e) => setSaveData({...saveData, title: e.target.value})}
+                placeholder="Enter note title"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="folder">Folder</Label>
+              <Select
+                value={saveData.folderId?.toString() || ''}
+                onValueChange={(value) => setSaveData({
+                  ...saveData, 
+                  folderId: value === '' ? null : parseInt(value)
+                })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a folder" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {/* We'll fetch the actual folders from localStorage */}
+                  {JSON.parse(localStorage.getItem('folders') || '[]').map((folder: any) => (
+                    <SelectItem key={folder.id} value={folder.id.toString()}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            {!saveAsNew && editingNoteId && (
+              <Button variant="outline" onClick={() => setSaveAsNew(true)}>
+                Save as New
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveNote}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
+  // Function to handle saving a note
+  function handleSaveNote() {
+    const savedNote = {
+      id: saveAsNew ? Date.now() : (editingNoteId || Date.now()),
+      title: saveData.title || 'Untitled Note',
+      content: content,
+      folderId: saveData.folderId,
+      isArchived: false,
+      isTrashed: false,
+      isPinned: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Get existing notes from localStorage
+    const notesJson = localStorage.getItem('notes');
+    let notes = notesJson ? JSON.parse(notesJson) : [];
+
+    if (saveAsNew || !editingNoteId) {
+      // Add as new note
+      notes.push(savedNote);
+    } else {
+      // Update existing note
+      notes = notes.map((note: any) => 
+        note.id === editingNoteId ? {...savedNote, createdAt: note.createdAt} : note
+      );
+    }
+
+    // Save back to localStorage
+    localStorage.setItem('notes', JSON.stringify(notes));
+    
+    // Show success message
+    toast({
+      description: saveAsNew ? "Note saved as new" : "Note updated",
+      duration: 2000,
+    });
+    
+    // Close dialog
+    setSaveDialogOpen(false);
+    setSaveAsNew(false);
+    
+    // Update state
+    setEditingNoteId(saveAsNew ? savedNote.id : editingNoteId);
+    setNoteTitle(savedNote.title);
+    
+    // Navigate back to notes page
+    setTimeout(() => {
+      window.location.href = '/notes';
+    }, 1000);
+  }
 };
 
 export default NotepadEditor;
