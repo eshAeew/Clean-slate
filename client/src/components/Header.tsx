@@ -42,7 +42,6 @@ const Header = ({
               title="File"
               items={[
                 { label: "New", icon: "ri-file-add-line", onClick: onNewFile },
-                { label: "Open", icon: "ri-folder-open-line", onClick: () => {} },
                 { label: "Save", icon: "ri-save-line", onClick: () => {} },
                 { label: "Export", icon: "ri-download-line", onClick: onDownload }
               ]}
