@@ -1148,18 +1148,18 @@ const NotesPage: React.FC = () => {
                     <div 
                       key={label.id} 
                       className={cn(
-                        "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
+                        "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100 group",
                         selectedLabel === label.id && "bg-blue-50 font-medium"
                       )}
                       onClick={() => setSelectedLabel(label.id)}
                     >
                       <Tag size={16} className="mr-2" style={{ color: label.color }} />
-                      <span>{label.name}</span>
-                      <div className="ml-auto hidden group-hover:flex">
+                      <span className="flex-1 truncate">{label.name}</span>
+                      <div className="ml-auto flex items-center">
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-6 w-6"
+                          className="h-6 w-6 p-0 opacity-70 hover:opacity-100"
                           onClick={(e) => {
                             e.stopPropagation();
                             openDialog('label', label);
@@ -1170,7 +1170,7 @@ const NotesPage: React.FC = () => {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-6 w-6 text-red-500"
+                          className="h-6 w-6 p-0 text-red-500 ml-1 opacity-70 hover:opacity-100"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteLabel(label.id);
