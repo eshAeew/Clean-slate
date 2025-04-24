@@ -1,13 +1,12 @@
-import { useState, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useState, useRef, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Upload, Plus, Info } from "lucide-react";
+import { Upload, Info } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,9 +34,15 @@ const AVAILABLE_FONTS = [
   { name: "Operator Mono", value: "'Operator Mono', monospace" }
 ];
 
+interface CustomFont {
+  name: string;
+  value: string;
+  data: string;
+}
+
 const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: SettingsModalProps) => {
   // Get stored custom fonts from localStorage
-  const getCustomFonts = () => {
+  const getCustomFonts = (): CustomFont[] => {
     try {
       const stored = localStorage.getItem('custom-fonts');
       return stored ? JSON.parse(stored) : [];
@@ -47,7 +52,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
     }
   };
   
-  const [customFonts, setCustomFonts] = useState(getCustomFonts());
+  const [customFonts, setCustomFonts] = useState<CustomFont[]>(getCustomFonts());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fontUploadAlert, setFontUploadAlert] = useState(false);
   const [newFontName, setNewFontName] = useState("");
@@ -117,7 +122,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
     document.head.appendChild(styleEl);
     
     // Save to localStorage
-    const newFont = {
+    const newFont: CustomFont = {
       name: newFontName,
       value: `"${newFontName}", monospace`,
       data: fontData
@@ -138,7 +143,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
 
   // Load any previously saved custom fonts when the component mounts
   const loadCustomFonts = () => {
-    customFonts.forEach(font => {
+    customFonts.forEach((font: CustomFont) => {
       // Create style element for each custom font
       const fontFace = `
         @font-face {
@@ -156,9 +161,9 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
   };
   
   // Load custom fonts
-  useState(() => {
+  useEffect(() => {
     loadCustomFonts();
-  });
+  }, [customFonts]);
 
   const handleSaveSettings = () => {
     // Convert line height string to numeric value
@@ -191,171 +196,214 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] apple-dialog">
-        <DialogHeader>
-          <DialogTitle className="text-gray-800 font-medium text-xl">Settings</DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid gap-5 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="theme" className="text-right font-medium text-gray-700">
-              Theme
-            </Label>
-            <Select 
-              value={settings.theme} 
-              onValueChange={(value) => setSettings({ ...settings, theme: value })}
-            >
-              <SelectTrigger id="theme" className="col-span-3 border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                <SelectValue placeholder="Select theme" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System Default</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-[425px] apple-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-gray-800 font-medium text-xl">Settings</DialogTitle>
+          </DialogHeader>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="font-family" className="text-right font-medium text-gray-700">
-              Font
-            </Label>
-            <div className="col-span-3">
+          <div className="grid gap-5 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="theme" className="text-right font-medium text-gray-700">
+                Theme
+              </Label>
               <Select 
-                value={settings.fontFamily} 
-                onValueChange={(value) => setSettings({ ...settings, fontFamily: value })}
+                value={settings.theme} 
+                onValueChange={(value) => setSettings({ ...settings, theme: value })}
               >
-                <SelectTrigger id="font-family" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select font" />
+                <SelectTrigger id="theme" className="col-span-3 border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                  <SelectValue placeholder="Select theme" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  <div className="p-2 flex justify-between items-center border-b">
-                    <span className="text-sm font-medium">System Fonts</span>
-                  </div>
-                  {AVAILABLE_FONTS.map(font => (
-                    <SelectItem key={font.name} value={font.value} style={{fontFamily: font.value}}>
-                      {font.name}
-                    </SelectItem>
-                  ))}
-                  
-                  {customFonts.length > 0 && (
-                    <>
-                      <div className="p-2 flex justify-between items-center border-b border-t">
-                        <span className="text-sm font-medium">Custom Fonts</span>
-                      </div>
-                      {customFonts.map(font => (
-                        <SelectItem key={font.name} value={font.value} style={{fontFamily: font.name}}>
-                          {font.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="system">System Default</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <div className="flex items-center mt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs flex items-center gap-1 mr-2"
-                  onClick={() => fileInputRef.current?.click()}
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="font-family" className="text-right font-medium text-gray-700">
+                Font
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={settings.fontFamily} 
+                  onValueChange={(value) => setSettings({ ...settings, fontFamily: value })}
                 >
-                  <Upload size={12} />
-                  Upload Font
-                </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".woff,.woff2,.ttf,.otf"
-                  onChange={handleFontFileChange}
+                  <SelectTrigger id="font-family" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select font" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <div className="p-2 flex justify-between items-center border-b">
+                      <span className="text-sm font-medium">System Fonts</span>
+                    </div>
+                    {AVAILABLE_FONTS.map(font => (
+                      <SelectItem key={font.name} value={font.value} style={{fontFamily: font.value}}>
+                        {font.name}
+                      </SelectItem>
+                    ))}
+                    
+                    {customFonts.length > 0 && (
+                      <>
+                        <div className="p-2 flex justify-between items-center border-b border-t">
+                          <span className="text-sm font-medium">Custom Fonts</span>
+                        </div>
+                        {customFonts.map((font: CustomFont) => (
+                          <SelectItem key={font.name} value={font.value} style={{fontFamily: font.name}}>
+                            {font.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs flex items-center gap-1 mr-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={12} />
+                    Upload Font
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".woff,.woff2,.ttf,.otf"
+                    onChange={handleFontFileChange}
+                  />
+                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <Info size={12} />
+                    Supports .woff, .woff2, .ttf, .otf
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="font-size" className="text-right font-medium text-gray-700">
+                Font Size
+              </Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Slider
+                  id="font-size"
+                  min={10}
+                  max={24}
+                  step={1}
+                  value={[settings.fontSize]}
+                  onValueChange={(value) => setSettings({ ...settings, fontSize: value[0] })}
+                  className="flex-1"
                 />
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                  <Info size={12} />
-                  Supports .woff, .woff2, .ttf, .otf
-                </span>
+                <span className="text-sm">{settings.fontSize}px</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="line-height" className="text-right font-medium text-gray-700">
+                Line Height
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={settings.lineHeight} 
+                  onValueChange={(value) => setSettings({ ...settings, lineHeight: value })}
+                >
+                  <SelectTrigger id="line-height" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <SelectValue placeholder="Select line height" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="loose">Loose</SelectItem>
+                    <SelectItem value="tight">Tight</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="auto-save" className="text-right font-medium text-gray-700">
+                Auto-save
+              </Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Switch
+                  id="auto-save"
+                  checked={settings.autoSave}
+                  onCheckedChange={(checked) => setSettings({ ...settings, autoSave: checked })}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="word-wrap" className="text-right font-medium text-gray-700">
+                Word wrap
+              </Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <Switch
+                  id="word-wrap"
+                  checked={settings.wordWrap}
+                  onCheckedChange={(checked) => setSettings({ ...settings, wordWrap: checked })}
+                />
               </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="font-size" className="text-right font-medium text-gray-700">
-              Font Size
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Slider
-                id="font-size"
-                min={10}
-                max={24}
-                step={1}
-                value={[settings.fontSize]}
-                onValueChange={(value) => setSettings({ ...settings, fontSize: value[0] })}
-                className="flex-1"
-              />
-              <span className="text-sm">{settings.fontSize}px</span>
-            </div>
-          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleSaveSettings} 
+              className="apple-button-primary rounded-full px-5 py-2"
+            >
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Font Upload Dialog */}
+      <Dialog open={fontUploadAlert} onOpenChange={setFontUploadAlert}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Upload Custom Font</DialogTitle>
+            <DialogDescription>
+              Enter a name for your custom font.
+            </DialogDescription>
+          </DialogHeader>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="line-height" className="text-right font-medium text-gray-700">
-              Line Height
-            </Label>
-            <div className="col-span-3">
-              <Select 
-                value={settings.lineHeight} 
-                onValueChange={(value) => setSettings({ ...settings, lineHeight: value })}
-              >
-                <SelectTrigger id="line-height" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                  <SelectValue placeholder="Select line height" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="loose">Loose</SelectItem>
-                  <SelectItem value="tight">Tight</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="auto-save" className="text-right font-medium text-gray-700">
-              Auto-save
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Switch
-                id="auto-save"
-                checked={settings.autoSave}
-                onCheckedChange={(checked) => setSettings({ ...settings, autoSave: checked })}
+          <div className="py-4">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="fontName">Font Name</Label>
+              <Input 
+                type="text" 
+                id="fontName" 
+                placeholder="My Custom Font" 
+                value={newFontName}
+                onChange={(e) => setNewFontName(e.target.value)}
               />
             </div>
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="word-wrap" className="text-right font-medium text-gray-700">
-              Word wrap
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Switch
-                id="word-wrap"
-                checked={settings.wordWrap}
-                onCheckedChange={(checked) => setSettings({ ...settings, wordWrap: checked })}
-              />
-            </div>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button 
-            onClick={handleSaveSettings} 
-            className="apple-button-primary rounded-full px-5 py-2"
-          >
-            Save changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setFontUploadAlert(false);
+                setNewFontName("");
+                localStorage.removeItem('temp-font-data');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={saveCustomFont}>
+              Save Font
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
