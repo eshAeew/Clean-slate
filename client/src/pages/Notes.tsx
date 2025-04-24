@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { DndContext, DragOverlay, DragEndEvent, DragStartEvent, closestCenter } from "@dnd-kit/core";
+import { 
+  DndContext, 
+  DragOverlay, 
+  DragEndEvent, 
+  DragStartEvent, 
+  closestCenter, 
+  useSensor, 
+  useSensors, 
+  PointerSensor,
+  MouseSensor
+} from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Link, useLocation } from "wouter";
 import { 
@@ -240,6 +250,21 @@ const NotesPage: React.FC = () => {
   
   // Drag and drop state
   const [activeItem, setActiveItem] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Min distance before drag starts
+      },
+    }),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
   
   // Save to localStorage whenever data changes
   useEffect(() => {
@@ -460,9 +485,27 @@ const NotesPage: React.FC = () => {
     );
   };
   
+  // Move a note to a specific folder
+  const moveNoteToFolder = (noteId: number, folderId: number | null) => {
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, folderId: folderId, updatedAt: new Date().toISOString() } : note
+      )
+    );
+    
+    const folderName = folderId === null ? "All Notes" : 
+      folders.find(f => f.id === folderId)?.name || "selected folder";
+    
+    toast({ 
+      description: `Note moved to ${folderName}`,
+      duration: 2000
+    });
+  };
+
   // Drag and drop handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { id, type } = event.active.data.current as { id: number, type: string };
+    setIsDragging(true);
     
     if (type === 'note') {
       const draggedNote = notes.find(note => note.id === id);
@@ -475,21 +518,26 @@ const NotesPage: React.FC = () => {
   
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setIsDragging(false);
     
     if (over && active.id !== over.id) {
       const { id: activeId, type: activeType } = active.data.current as { id: number, type: string };
+      
+      if (!over.data.current) {
+        // No valid drop target
+        setActiveItem(null);
+        return;
+      }
+      
       const { id: overId, type: overType } = over.data.current as { id: number, type: string };
       
       if (activeType === 'note' && overType === 'folder') {
         // Move note to folder
-        setNotes(prevNotes => 
-          prevNotes.map(note => 
-            note.id === activeId ? { ...note, folderId: overId } : note
-          )
-        );
-        toast({ description: "Note moved to folder" });
+        moveNoteToFolder(activeId, overId);
+      } else if (activeType === 'note' && overType === 'all-notes') {
+        // Move note to root (no folder)
+        moveNoteToFolder(activeId, null);
       }
-      // Add other drag/drop interactions as needed
     }
     
     setActiveItem(null);
@@ -604,7 +652,7 @@ const NotesPage: React.FC = () => {
           <ScrollArea>
             <div className="px-3 py-2">
               <DndContext
-                sensors={[]}
+                sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
