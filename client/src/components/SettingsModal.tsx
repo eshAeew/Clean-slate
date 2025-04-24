@@ -50,21 +50,21 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] apple-dialog">
         <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle className="text-gray-800 font-medium text-xl">Settings</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-5 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="theme" className="text-right">
+            <Label htmlFor="theme" className="text-right font-medium text-gray-700">
               Theme
             </Label>
             <Select 
               value={settings.theme} 
               onValueChange={(value) => setSettings({ ...settings, theme: value })}
             >
-              <SelectTrigger id="theme" className="col-span-3">
+              <SelectTrigger id="theme" className="col-span-3 border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
               <SelectContent>
@@ -76,7 +76,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="font-size" className="text-right">
+            <Label htmlFor="font-size" className="text-right font-medium text-gray-700">
               Font Size
             </Label>
             <div className="col-span-3 flex items-center space-x-2">
@@ -94,7 +94,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="line-height" className="text-right">
+            <Label htmlFor="line-height" className="text-right font-medium text-gray-700">
               Line Height
             </Label>
             <div className="col-span-3">
@@ -102,7 +102,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
                 value={settings.lineHeight} 
                 onValueChange={(value) => setSettings({ ...settings, lineHeight: value })}
               >
-                <SelectTrigger id="line-height">
+                <SelectTrigger id="line-height" className="border-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500">
                   <SelectValue placeholder="Select line height" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,7 +115,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="auto-save" className="text-right">
+            <Label htmlFor="auto-save" className="text-right font-medium text-gray-700">
               Auto-save
             </Label>
             <div className="col-span-3 flex items-center space-x-2">
@@ -128,7 +128,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="spellcheck" className="text-right">
+            <Label htmlFor="spellcheck" className="text-right font-medium text-gray-700">
               Spell checking
             </Label>
             <div className="col-span-3 flex items-center space-x-2">

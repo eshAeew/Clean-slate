@@ -14,21 +14,21 @@ interface EditorStatusBarProps {
 
 const EditorStatusBar = ({ stats, onFullScreenToggle }: EditorStatusBarProps) => {
   return (
-    <div className="bg-secondary border-t border-border px-4 py-1 text-xs flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <span className="text-muted-foreground">Lines: {stats.lines}</span>
-        <span className="text-muted-foreground">Characters: {stats.characters}</span>
-        <span className="text-muted-foreground">Words: {stats.words}</span>
+    <div className="bg-gray-50 border-t border-gray-100 px-6 py-2 text-xs flex items-center justify-between rounded-b-lg">
+      <div className="flex items-center space-x-5">
+        <span className="text-gray-500">Lines: {stats.lines}</span>
+        <span className="text-gray-500">Characters: {stats.characters}</span>
+        <span className="text-gray-500">Words: {stats.words}</span>
       </div>
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-4">
         <span className="flex items-center text-green-600">
           <i className="ri-save-line mr-1"></i> Auto-saved
         </span>
-        <span className="text-muted-foreground">UTF-8</span>
+        <span className="text-gray-500">UTF-8</span>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-6 w-6 p-0" 
+          className="h-6 w-6 p-0 rounded-full text-gray-500 hover:bg-gray-100" 
           onClick={onFullScreenToggle} 
           title="Toggle full screen"
         >

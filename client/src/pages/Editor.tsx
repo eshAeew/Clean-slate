@@ -103,9 +103,9 @@ greet();`
         onFormat={handleFormat}
       />
       
-      <main className="flex-1 overflow-hidden flex">
-        <div className="flex-1 flex flex-col h-full">
-          <div className="flex-1 relative bg-primary">
+      <main className="flex-1 overflow-hidden flex p-3 bg-gray-50">
+        <div className="flex-1 flex flex-col h-full bg-white rounded-lg editor-container">
+          <div className="flex-1 relative">
             <Editor
               height="100%"
               defaultLanguage="plaintext"
@@ -114,6 +114,7 @@ greet();`
               options={editorOptions}
               onMount={handleEditorDidMount}
               theme={editorOptions.theme === 'vs-dark' ? 'vs-dark' : 'vs'}
+              className="rounded-t-lg"
             />
           </div>
 
