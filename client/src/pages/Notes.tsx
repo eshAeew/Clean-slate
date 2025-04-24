@@ -833,10 +833,17 @@ const NotesPage: React.FC = () => {
                       <span>Duplicate</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => archiveNote(note.id)}>
-                      <Archive className="mr-2 h-4 w-4" />
-                      <span>Archive</span>
-                    </DropdownMenuItem>
+                    {note.isArchived ? (
+                      <DropdownMenuItem onClick={() => unarchiveNote(note.id)}>
+                        <Archive className="mr-2 h-4 w-4" />
+                        <span>Restore from Archive</span>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => archiveNote(note.id)}>
+                        <Archive className="mr-2 h-4 w-4" />
+                        <span>Archive</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>Move to Trash</span>
@@ -901,10 +908,17 @@ const NotesPage: React.FC = () => {
             <span>Duplicate</span>
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onClick={() => archiveNote(note.id)}>
-            <Archive className="mr-2 h-4 w-4" />
-            <span>Archive</span>
-          </ContextMenuItem>
+          {note.isArchived ? (
+            <ContextMenuItem onClick={() => unarchiveNote(note.id)}>
+              <Archive className="mr-2 h-4 w-4" />
+              <span>Restore from Archive</span>
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onClick={() => archiveNote(note.id)}>
+              <Archive className="mr-2 h-4 w-4" />
+              <span>Archive</span>
+            </ContextMenuItem>
+          )}
           <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
             <Trash2 className="mr-2 h-4 w-4" />
             <span>Move to Trash</span>
@@ -957,7 +971,7 @@ const NotesPage: React.FC = () => {
                 onDragEnd={handleDragEnd}
               >
                 {/* Fixed sections */}
-                <div className="mb-4">
+                <div className="space-y-1 mb-4">
                   {/* Make "All Notes" a droppable target */}
                   {(() => {
                     const { isOver, setNodeRef } = useDroppable({
@@ -973,12 +987,13 @@ const NotesPage: React.FC = () => {
                         ref={setNodeRef}
                         className={cn(
                           "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
-                          selectedFolder === null && "bg-blue-50",
+                          selectedFolder === null && !viewArchived && "bg-blue-50",
                           isOver && "bg-blue-100 ring-2 ring-blue-300"
                         )}
                         onClick={() => {
                           setSelectedFolder(null);
                           setSelectedLabel(null);
+                          setViewArchived(false);
                         }}
                       >
                         <File size={16} className={cn("mr-2", isOver ? "text-blue-600" : "text-gray-500")} />
@@ -986,6 +1001,22 @@ const NotesPage: React.FC = () => {
                       </div>
                     );
                   })()}
+                  
+                  {/* Archive section */}
+                  <div 
+                    className={cn(
+                      "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
+                      viewArchived && "bg-blue-50"
+                    )}
+                    onClick={() => {
+                      setViewArchived(true);
+                      setSelectedFolder(null);
+                      setSelectedLabel(null);
+                    }}
+                  >
+                    <Archive size={16} className="mr-2 text-gray-500" />
+                    <span>Archive</span>
+                  </div>
                 </div>
                 
                 {/* Folders section */}
@@ -1084,10 +1115,18 @@ const NotesPage: React.FC = () => {
       
       {/* Main content */}
       <div className="flex-1 flex flex-col">
+        {/* Header Section */}
+        <div className="p-4 border-b border-gray-200">
+          <h1 className="text-xl font-bold">{viewArchived ? "Archive" : "Notes"}</h1>
+          {viewArchived && (
+            <p className="text-sm text-gray-500 mt-1">Archived notes are stored here. Restore them to make them active again.</p>
+          )}
+        </div>
+        
         {/* Notes list */}
         <div className="h-full p-4 overflow-auto">
-          {/* Pinned notes section */}
-          {filteredNotes.some(note => note.isPinned) && (
+          {/* Show pinned notes only in regular view, not in archive */}
+          {!viewArchived && filteredNotes.some(note => note.isPinned) && (
             <div className="mb-6">
               <h2 className="text-xs font-medium text-gray-500 uppercase mb-2">Pinned</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1102,10 +1141,12 @@ const NotesPage: React.FC = () => {
           
           {/* Other notes */}
           <div>
-            <h2 className="text-xs font-medium text-gray-500 uppercase mb-2">Notes</h2>
+            <h2 className="text-xs font-medium text-gray-500 uppercase mb-2">
+              {viewArchived ? "Archived Notes" : "Notes"}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredNotes
-                .filter(note => !note.isPinned)
+                .filter(note => !viewArchived || !note.isPinned) // In archive, show all notes as they can't be pinned
                 .map(note => (
                   <DraggableNote key={note.id} note={note} />
                 ))}
