@@ -19,6 +19,48 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     const newContent = value || '';
     setContent(newContent);
     updateStats(newContent);
+    
+    // Check for live markdown formatting if the editor is available
+    if (editorRef.current) {
+      const editor = editorRef.current;
+      const model = editor.getModel();
+      if (!model) return;
+      
+      // Get current position
+      const position = editor.getPosition();
+      if (!position) return;
+      
+      // Get the line content
+      const lineContent = model.getLineContent(position.lineNumber);
+      
+      // Check for patterns: **text** for bold and *text* for italic
+      // This is a simple implementation - in a production app, you'd use more sophisticated regex
+      
+      // Check for bold pattern completion
+      if (lineContent.includes('**') && lineContent.split('**').length > 2) {
+        const segments = lineContent.split('**');
+        for (let i = 0; i < segments.length - 1; i++) {
+          if (i % 2 === 0 && segments[i+1].trim() !== '') {
+            // Found a potential bold pattern
+            // In a real implementation, you would add styling or conversion here
+            // For now, we're just demonstrating the pattern detection
+            console.log('Bold pattern detected:', segments[i+1]);
+          }
+        }
+      }
+      
+      // Check for italic pattern completion
+      if (lineContent.includes('*') && lineContent.split('*').length > 2) {
+        const segments = lineContent.split('*');
+        for (let i = 0; i < segments.length - 1; i++) {
+          if (i % 2 === 0 && segments[i+1].trim() !== '' && !lineContent.includes('**')) {
+            // Found a potential italic pattern
+            // In a real implementation, you would add styling or conversion here
+            console.log('Italic pattern detected:', segments[i+1]);
+          }
+        }
+      }
+    }
   };
 
   const updateStats = (content: string) => {
@@ -148,6 +190,19 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         // Convert each line to a numbered list item
         const numberedList = selectedText.split('\n').map((line, index) => `${index + 1}. ${line.trim()}`).join('\n');
         editOperation(numberedList);
+        break;
+      case 'bold':
+        // Add ** around the selected text for bold formatting
+        editOperation(`**${selectedText}**`);
+        break;
+      case 'italic':
+        // Add * around the selected text for italic formatting
+        editOperation(`*${selectedText}*`);
+        break;
+      case 'addUrl':
+        // Check if the value contains the URL, otherwise use a default placeholder
+        const url = value || 'https://example.com';
+        editOperation(`[${selectedText}](${url})`);
         break;
       default:
         break;
