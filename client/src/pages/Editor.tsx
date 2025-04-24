@@ -231,17 +231,17 @@ greet();`;
             <div className="grid gap-2">
               <Label htmlFor="folder">Folder</Label>
               <Select
-                value={saveData.folderId?.toString() || ''}
+                value={saveData.folderId?.toString() || 'none'}
                 onValueChange={(value) => setSaveData({
                   ...saveData, 
-                  folderId: value === '' ? null : parseInt(value)
+                  folderId: value === 'none' ? null : parseInt(value)
                 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {/* We'll fetch the actual folders from localStorage */}
                   {JSON.parse(localStorage.getItem('folders') || '[]').map((folder: any) => (
                     <SelectItem key={folder.id} value={folder.id.toString()}>

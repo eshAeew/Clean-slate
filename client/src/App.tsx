@@ -14,7 +14,7 @@ import { Edit, FileText } from "lucide-react";
 const Navigation = () => {
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
-      <Link href="/">
+      <Link href="/editor">
         <Button size="icon" className="rounded-full h-12 w-12 bg-blue-600 hover:bg-blue-700 shadow-lg">
           <Edit className="h-6 w-6" />
         </Button>
@@ -33,6 +33,7 @@ function Router() {
     <>
       <Switch>
         <Route path="/" component={Editor} />
+        <Route path="/editor" component={Editor} />
         <Route path="/notes" component={Notes} />
         <Route component={NotFound} />
       </Switch>
