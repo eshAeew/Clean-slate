@@ -63,6 +63,10 @@ const NotepadEditor = () => {
     folderId: null as number | null
   });
 
+  // Editor loading state
+  const [isEditorLoading, setIsEditorLoading] = useState(true);
+  const [editorLoadError, setEditorLoadError] = useState(false);
+  
   // Initialize the editor with hooks
   const { 
     editorRef,
@@ -74,6 +78,24 @@ const NotepadEditor = () => {
     downloadContent,
     updateEditorValue
   } = useEditor(content, setContent);
+  
+  // Handle editor load success
+  const handleEditorDidMountWrapper = (editor: any) => {
+    setIsEditorLoading(false);
+    setEditorLoadError(false);
+    handleEditorDidMount(editor);
+  };
+  
+  // Handle editor load error
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isEditorLoading) {
+        setEditorLoadError(true);
+      }
+    }, 5000); // Wait 5 seconds before showing error
+    
+    return () => clearTimeout(timeout);
+  }, [isEditorLoading]);
   
   // Custom format handler to support save operation
   const handleCustomAction = (action: string) => {
@@ -302,16 +324,67 @@ const NotepadEditor = () => {
       <main className="flex-1 overflow-hidden flex p-3 bg-gray-50">
         <div className="flex-1 flex flex-col h-full bg-white rounded-lg editor-container">
           <div className="flex-1 relative">
-            <Editor
-              height="100%"
-              defaultLanguage="plaintext"
-              value={content}
-              onChange={handleContentChange}
-              options={editorOptions}
-              onMount={handleEditorDidMount}
-              theme={editorOptions.theme === 'vs-dark' ? 'vs-dark' : 'vs'}
-              className="rounded-t-lg"
-            />
+            {editorLoadError ? (
+              <div className="flex flex-col items-center justify-center h-full p-6 bg-gray-50 rounded-lg text-center">
+                <i className="ri-error-warning-line text-red-500 text-4xl mb-4"></i>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Editor failed to load</h3>
+                <p className="text-gray-600 mb-4">We're having trouble loading the rich text editor component.</p>
+                
+                <div className="w-full max-w-2xl">
+                  <label htmlFor="fallbackEditor" className="block text-sm font-medium text-gray-700 mb-1">
+                    You can still edit your note here:
+                  </label>
+                  <textarea
+                    id="fallbackEditor"
+                    className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={content}
+                    onChange={(e) => {
+                      setContent(e.target.value);
+                      handleContentChange(e.target.value);
+                    }}
+                    placeholder="Enter your note content here..."
+                  ></textarea>
+                </div>
+                
+                <button 
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={() => {
+                    setIsEditorLoading(true);
+                    setEditorLoadError(false);
+                    setTimeout(() => window.location.reload(), 100);
+                  }}
+                >
+                  <i className="ri-refresh-line mr-1"></i>
+                  Try Again
+                </button>
+              </div>
+            ) : (
+              <Editor
+                height="100%"
+                defaultLanguage="plaintext"
+                value={content}
+                onChange={handleContentChange}
+                options={{
+                  ...editorOptions,
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  minimap: { enabled: editorOptions.minimap?.enabled },
+                  fontSize: editorOptions.fontSize || 14,
+                  fontFamily: editorOptions.fontFamily || 'Consolas, Monaco, "Courier New", monospace'
+                }}
+                onMount={handleEditorDidMountWrapper}
+                theme={editorOptions.theme === 'vs-dark' ? 'vs-dark' : 'vs'}
+                className="rounded-t-lg"
+                loading={
+                  <div className="flex items-center justify-center h-full p-6">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading editor...</p>
+                    </div>
+                  </div>
+                }
+              />
+            )}
           </div>
 
           <EditorStatusBar 
