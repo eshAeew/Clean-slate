@@ -1,0 +1,109 @@
+import { useState } from "react";
+import EditorToolbar from "./EditorToolbar";
+import Menu from "./Menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Settings } from "lucide-react";
+
+interface HeaderProps {
+  onSettingsClick: () => void;
+  onNewFile: () => void;
+  onDownload: () => void;
+  onSearch: (searchTerm: string) => void;
+  onFormat: (action: string) => void;
+}
+
+const Header = ({ 
+  onSettingsClick, 
+  onNewFile, 
+  onDownload, 
+  onSearch,
+  onFormat 
+}: HeaderProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    onSearch(e.target.value);
+  };
+
+  return (
+    <header className="bg-primary border-b border-border">
+      <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center space-x-4">
+          {/* Logo and Title */}
+          <div className="flex items-center">
+            <i className="ri-file-text-line text-accent text-xl mr-2"></i>
+            <h1 className="text-lg font-medium">SimpleNote</h1>
+          </div>
+          
+          {/* File Operations */}
+          <div className="flex items-center space-x-2">
+            <Menu 
+              title="File"
+              items={[
+                { label: "New", icon: "ri-file-add-line", onClick: onNewFile },
+                { label: "Open", icon: "ri-folder-open-line", onClick: () => {} },
+                { label: "Save", icon: "ri-save-line", onClick: () => {} },
+                { label: "Export", icon: "ri-download-line", onClick: onDownload }
+              ]}
+            />
+            
+            <Menu 
+              title="Edit"
+              items={[
+                { label: "Undo", icon: "ri-arrow-go-back-line", onClick: () => onFormat("undo") },
+                { label: "Redo", icon: "ri-arrow-go-forward-line", onClick: () => onFormat("redo") },
+                { type: "separator" },
+                { label: "Cut", icon: "ri-scissors-cut-line", onClick: () => onFormat("cut") },
+                { label: "Copy", icon: "ri-file-copy-line", onClick: () => onFormat("copy") },
+                { label: "Paste", icon: "ri-clipboard-line", onClick: () => onFormat("paste") },
+                { type: "separator" },
+                { label: "Select All", icon: "ri-select-all", onClick: () => onFormat("selectAll") }
+              ]}
+            />
+            
+            <Menu 
+              title="View"
+              items={[
+                { 
+                  label: "Status Bar", 
+                  icon: "ri-eye-line", 
+                  onClick: () => {}, 
+                  checked: true 
+                },
+                { 
+                  label: "Word Wrap", 
+                  icon: "ri-text-wrap", 
+                  onClick: () => onFormat("toggleWordWrap") 
+                }
+              ]}
+            />
+          </div>
+        </div>
+        
+        {/* Search and User Actions */}
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Input
+              type="search"
+              placeholder="Search in text..."
+              className="pl-8 pr-2 py-1 text-sm w-56"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
+          
+          <Button variant="ghost" size="icon" onClick={onSettingsClick} title="Settings">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+      
+      <EditorToolbar onFormat={onFormat} />
+    </header>
+  );
+};
+
+export default Header;
