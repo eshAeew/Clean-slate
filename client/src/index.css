@@ -112,54 +112,14 @@
 }
 
 /* Text formatting decorations */
-.editor-bold {
+.editor-bold-text {
   font-weight: bold !important;
 }
 
-.editor-italic {
+.editor-italic-text {
   font-style: italic !important;
 }
 
-.editor-underline {
+.editor-underline-text {
   text-decoration: underline !important;
-}
-
-.editor-strikethrough {
-  text-decoration: line-through !important;
-}
-
-.editor-link {
-  color: #0366d6 !important;
-  text-decoration: underline !important;
-}
-
-.editor-heading {
-  font-weight: bold !important;
-}
-
-.editor-h1 {
-  font-size: 2em !important;
-}
-
-.editor-h2 {
-  font-size: 1.5em !important;
-}
-
-.editor-h3 {
-  font-size: 1.2em !important;
-}
-
-.editor-code {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace !important;
-  background-color: rgba(0, 0, 0, 0.05) !important;
-  padding: 0 3px !important;
-  border-radius: 3px !important;
-}
-
-.editor-code-block {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace !important;
-  background-color: rgba(0, 0, 0, 0.05) !important;
-  display: block !important;
-  padding: 8px !important;
-  border-radius: 4px !important;
 }
