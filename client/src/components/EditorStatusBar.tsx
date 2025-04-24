@@ -1,4 +1,4 @@
-import { Maximize } from "lucide-react";
+import { Maximize, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EditorStats {
@@ -22,7 +22,7 @@ const EditorStatusBar = ({ stats, onFullScreenToggle }: EditorStatusBarProps) =>
       </div>
       <div className="flex items-center space-x-4">
         <span className="flex items-center text-green-600">
-          <i className="ri-save-line mr-1"></i> Auto-saved
+          <Save className="h-3 w-3 mr-1" /> Auto-saved
         </span>
         <span className="text-gray-500">UTF-8</span>
         <Button 

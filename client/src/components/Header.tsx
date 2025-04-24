@@ -3,7 +3,11 @@ import EditorToolbar from "./EditorToolbar";
 import Menu from "./Menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings, Save } from "lucide-react";
+import { 
+  Search, Settings, Save, FileText, Undo, Redo, 
+  Scissors, Copy, ClipboardCopy, AlignLeft, TextCursorInput, 
+  FileDown
+} from "lucide-react";
 
 interface HeaderProps {
   onSettingsClick: () => void;
