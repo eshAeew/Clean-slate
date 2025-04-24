@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   DndContext, 
   DragOverlay, 
@@ -222,21 +224,35 @@ type DialogType = 'folder' | 'note' | 'label' | null;
 const NotesPage: React.FC = () => {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  // Load data from localStorage if available, otherwise use mock data
-  const [folders, setFolders] = useState<IFolder[]>(() => {
-    const savedFolders = localStorage.getItem('folders');
-    return savedFolders ? JSON.parse(savedFolders) : MOCK_FOLDERS;
+  const queryClient = useQueryClient();
+  
+  // Use React Query for API data fetching
+  const { 
+    data: folders = [], 
+    isLoading: isFoldersLoading 
+  } = useQuery<IFolder[]>({
+    queryKey: ['/api/folders'],
+    queryFn: async () => await apiRequest<IFolder[]>('/api/folders'),
+  });
+
+  const { 
+    data: notes = [], 
+    isLoading: isNotesLoading 
+  } = useQuery<INote[]>({
+    queryKey: ['/api/notes'],
+    queryFn: async () => await apiRequest<INote[]>('/api/notes'),
+  });
+
+  const { 
+    data: labels = [], 
+    isLoading: isLabelsLoading 
+  } = useQuery<ILabel[]>({
+    queryKey: ['/api/labels'],
+    queryFn: async () => await apiRequest<ILabel[]>('/api/labels'),
   });
   
-  const [notes, setNotes] = useState<INote[]>(() => {
-    const savedNotes = localStorage.getItem('notes');
-    return savedNotes ? JSON.parse(savedNotes) : MOCK_NOTES;
-  });
-  
-  const [labels, setLabels] = useState<ILabel[]>(() => {
-    const savedLabels = localStorage.getItem('labels');
-    return savedLabels ? JSON.parse(savedLabels) : MOCK_LABELS;
-  });
+  // Add UI state tracking for folder expansion
+  const [expandedFolderIds, setExpandedFolderIds] = useState<number[]>([]);
   
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
