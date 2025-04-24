@@ -11,7 +11,9 @@ import {
   PointerSensor,
   MouseSensor,
   useDraggable,
-  useDroppable
+  useDroppable,
+  DragMoveEvent,
+  UniqueIdentifier
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Link, useLocation } from "wouter";
@@ -506,62 +508,66 @@ const NotesPage: React.FC = () => {
 
   // Drag and drop handlers
   const handleDragStart = (event: DragStartEvent) => {
-    const { id, type } = event.active.data.current as { id: number, type: string };
+    console.log('Drag start:', event);
     setIsDragging(true);
     
-    if (type === 'note') {
-      const draggedNote = notes.find(note => note.id === id);
-      setActiveItem({ ...draggedNote, type });
-    } else if (type === 'folder') {
-      const draggedFolder = folders.find(folder => folder.id === id);
-      setActiveItem({ ...draggedFolder, type });
+    const idStr = event.active.id.toString();
+    
+    // Note ID format: note-123
+    if (idStr.startsWith('note-')) {
+      const noteId = parseInt(idStr.replace('note-', ''));
+      const draggedNote = notes.find(note => note.id === noteId);
+      
+      if (draggedNote) {
+        console.log('Dragging note:', draggedNote);
+        setActiveItem({ ...draggedNote, type: 'note' });
+      }
+    }
+    // Folder ID format: folder-123
+    else if (idStr.startsWith('folder-')) {
+      const folderId = parseInt(idStr.replace('folder-', ''));
+      const draggedFolder = folders.find(folder => folder.id === folderId);
+      
+      if (draggedFolder) {
+        console.log('Dragging folder:', draggedFolder);
+        setActiveItem({ ...draggedFolder, type: 'folder' });
+      }
     }
   };
   
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    console.log('Drag end:', event);
     setIsDragging(false);
     
-    // Log the drag operation
-    console.log('Drag end event:', { 
-      active: active, 
-      over: over,
-      activeId: active.id,
-      activeData: active.data.current,
-      overId: over?.id,
-      overData: over?.data.current
-    });
+    const { active, over } = event;
     
-    if (over && active.id !== over.id) {
-      // Get active item info
-      const activeData = active.data.current as { id: number, type: string } | undefined;
-      if (!activeData) {
-        setActiveItem(null);
-        return;
+    if (!over) {
+      console.log('No drop target');
+      setActiveItem(null);
+      return;
+    }
+    
+    // Get active ID
+    const activeId = active.id.toString();
+    // Get over ID
+    const overId = over.id.toString();
+    
+    console.log(`Dropping ${activeId} onto ${overId}`);
+    
+    // Handle note drops
+    if (activeId.startsWith('note-')) {
+      const noteId = parseInt(activeId.replace('note-', ''));
+      
+      // Dropping on "All Notes"
+      if (overId === 'all-notes') {
+        console.log(`Moving note ${noteId} to All Notes`);
+        moveNoteToFolder(noteId, null);
       }
-      
-      const { id: activeId, type: activeType } = activeData;
-      
-      // Get over item info
-      const overData = over.data.current as { id: number | null, type: string } | undefined;
-      if (!overData) {
-        // No valid drop target
-        setActiveItem(null);
-        return;
-      }
-      
-      const { id: overId, type: overType } = overData;
-      
-      console.log(`Moving ${activeType} (id: ${activeId}) to ${overType} (id: ${overId})`);
-      
-      if (activeType === 'note') {
-        if (overType === 'folder') {
-          // Move note to folder
-          moveNoteToFolder(activeId, overId as number);
-        } else if (overType === 'all-notes') {
-          // Move note to root (no folder)
-          moveNoteToFolder(activeId, null);
-        }
+      // Dropping on a folder
+      else if (overId.startsWith('folder-')) {
+        const folderId = parseInt(overId.replace('folder-', ''));
+        console.log(`Moving note ${noteId} to folder ${folderId}`);
+        moveNoteToFolder(noteId, folderId);
       }
     }
     
