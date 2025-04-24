@@ -22,7 +22,6 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
       (editorOptions.lineHeight >= 1.8 ? 'loose' : 
        editorOptions.lineHeight <= 1.3 ? 'tight' : 'normal') : 'normal',
     autoSave: true,
-    spellCheck: true,
   });
 
   const handleSaveSettings = () => {
@@ -129,19 +128,6 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
                 id="auto-save"
                 checked={settings.autoSave}
                 onCheckedChange={(checked) => setSettings({ ...settings, autoSave: checked })}
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="spellcheck" className="text-right font-medium text-gray-700">
-              Spell checking
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Switch
-                id="spellcheck"
-                checked={settings.spellCheck}
-                onCheckedChange={(checked) => setSettings({ ...settings, spellCheck: checked })}
               />
             </div>
           </div>
