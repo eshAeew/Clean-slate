@@ -414,7 +414,7 @@ const NotepadEditor = () => {
           
           {/* Save button that appears when there are unsaved changes */}
           {hasUnsavedChanges && (
-            <div className="absolute -top-16 left-0 animate-fadeIn">
+            <div className="absolute -top-14 -left-2 animate-fadeIn">
               <StyledButton 
                 text="Save Changes"
                 onClick={() => setSaveDialogOpen(true)}
