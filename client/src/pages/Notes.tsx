@@ -498,6 +498,52 @@ const NotesPage: React.FC = () => {
     setDialogData({});
   };
   
+  // Function to delete a label
+  const deleteLabel = (labelId: number) => {
+    // Check if any notes are using this label
+    const notesWithLabel = notes.filter(note => 
+      note.labels && note.labels.some(label => label.id === labelId)
+    );
+    
+    if (notesWithLabel.length > 0) {
+      if (confirm(`This label is used in ${notesWithLabel.length} note(s). Deleting it will remove the label from these notes. Continue?`)) {
+        // Remove the label from all notes that use it
+        setNotes(prevNotes => 
+          prevNotes.map(note => {
+            if (note.labels && note.labels.some(label => label.id === labelId)) {
+              return {
+                ...note,
+                labels: note.labels.filter(label => label.id !== labelId),
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return note;
+          })
+        );
+        
+        // Remove the label
+        setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
+        
+        toast({ 
+          description: "Label deleted and removed from notes",
+          duration: 3000
+        });
+      }
+    } else {
+      // Just delete the label as it's not used in any notes
+      setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
+      toast({ 
+        description: "Label deleted",
+        duration: 2000
+      });
+    }
+    
+    // Reset selected label if we just deleted it
+    if (selectedLabel === labelId) {
+      setSelectedLabel(null);
+    }
+  };
+  
   // Function to delete a folder
   const deleteFolder = (folderId: number) => {
     // First, check if folder has any notes
@@ -1120,6 +1166,17 @@ const NotesPage: React.FC = () => {
                           }}
                         >
                           <Edit size={14} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-red-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteLabel(label.id);
+                          }}
+                        >
+                          <Trash2 size={14} />
                         </Button>
                       </div>
                     </div>
