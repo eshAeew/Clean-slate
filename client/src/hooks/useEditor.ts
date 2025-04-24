@@ -162,8 +162,10 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
 
   const newFile = () => {
     if (!editorRef.current) return;
-    // Clear the editor and set to default content
+    // Clear the editor content
     editorRef.current.setValue('');
+    // Clear the content state
+    setContent('');
   };
 
   return {

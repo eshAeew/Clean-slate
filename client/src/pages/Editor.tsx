@@ -42,8 +42,8 @@ function greet() {
 
 greet();`;
 
-  // Get stored note from the Notes page, if any
-  const [content, setContent] = useLocalStorage('notepad-content', defaultContent);
+  // Default content (only used when creating a completely new note)
+  const [content, setContent] = useState<string>(defaultContent);
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   
   // useLocation hook for navigation
@@ -161,7 +161,19 @@ greet();`;
     <div className="h-screen flex flex-col">
       <Header 
         onSettingsClick={() => setShowSettings(true)}
-        onNewFile={newFile}
+        onNewFile={() => {
+          newFile();
+          setNoteTitle('Untitled Note');
+          setEditingNoteId(null);
+          setSaveData({
+            title: '',
+            folderId: null
+          });
+          toast({
+            description: "New note created",
+            duration: 1500,
+          });
+        }}
         onDownload={() => setShowExportDialog(true)}
         onSearch={handleSearch}
         onFormat={handleCustomAction}

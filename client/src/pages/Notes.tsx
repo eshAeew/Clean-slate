@@ -217,8 +217,17 @@ const NotesPage: React.FC = () => {
   
   // Function to open a note in the editor
   const openNoteInEditor = (note: INote) => {
+    // First clear any existing content in the editor
+    localStorage.removeItem('notepad-content');
+    
     // Store the note in localStorage to be accessed from the editor page
-    localStorage.setItem('editingNote', JSON.stringify(note));
+    localStorage.setItem('editingNote', JSON.stringify({
+      id: note.id,
+      title: note.title,
+      content: note.content,
+      folderId: note.folderId
+    }));
+    
     // Navigate to the editor page
     setLocation('/editor');
     toast({ description: "Opening note in editor" });
