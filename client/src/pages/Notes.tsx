@@ -227,6 +227,7 @@ const NotesPage: React.FC = () => {
   
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
+  const [selectedLabel, setSelectedLabel] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
   // Function to open a note in the editor
@@ -321,7 +322,7 @@ const NotesPage: React.FC = () => {
     localStorage.setItem('labels', JSON.stringify(labels));
   }, [labels]);
   
-  // Filtered notes based on search and selected folder
+  // Filtered notes based on search, selected folder and label
   const filteredNotes = notes.filter(note => {
     // Filter by search
     const matchesSearch = searchTerm === "" || 
@@ -331,10 +332,14 @@ const NotesPage: React.FC = () => {
     // Filter by folder if selected
     const matchesFolder = selectedFolder === null || note.folderId === selectedFolder;
     
+    // Filter by label if selected
+    const matchesLabel = selectedLabel === null || 
+      (note.labels && note.labels.some(label => label.id === selectedLabel));
+    
     // Don't show archived or trashed notes in normal view
     const isVisible = !note.isArchived && !note.isTrashed;
     
-    return matchesSearch && matchesFolder && isVisible;
+    return matchesSearch && matchesFolder && matchesLabel && isVisible;
   });
   
   // Function to toggle folder expansion
@@ -397,7 +402,14 @@ const NotesPage: React.FC = () => {
         setNotes(prevNotes => 
           prevNotes.map(note => 
             note.id === dialogData.id ? 
-              { ...note, title: dialogData.title, content: dialogData.content, updatedAt: new Date().toISOString() } : 
+              { 
+                ...note, 
+                title: dialogData.title, 
+                content: dialogData.content, 
+                folderId: dialogData.folderId !== undefined ? dialogData.folderId : note.folderId,
+                labels: dialogData.labels || note.labels || [],
+                updatedAt: new Date().toISOString() 
+              } : 
               note
           )
         );
@@ -408,12 +420,13 @@ const NotesPage: React.FC = () => {
           id: Math.max(...notes.map(n => n.id), 0) + 1,
           title: dialogData.title,
           content: dialogData.content,
-          folderId: selectedFolder,
+          folderId: dialogData.folderId !== undefined ? dialogData.folderId : selectedFolder,
           isArchived: false,
           isTrashed: false,
           isPinned: false,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          labels: dialogData.labels || []
         };
         
         setNotes(prevNotes => [...prevNotes, newNote]);
@@ -636,7 +649,10 @@ const NotesPage: React.FC = () => {
                 isOver && "bg-blue-100 ring-2 ring-blue-300" // Highlight when dragging over
               )}
               style={{ paddingLeft: `${paddingLeft + 8}px` }}
-              onClick={() => setSelectedFolder(folder.id)}
+              onClick={() => {
+                setSelectedFolder(folder.id);
+                setSelectedLabel(null);
+              }}
             >
               <div 
                 className="mr-1 text-gray-500 cursor-pointer"
@@ -731,7 +747,7 @@ const NotesPage: React.FC = () => {
             {...listeners}
             {...attributes}
             className={cn(
-              "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
+              "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-all hover:shadow-md",
               selectedNote === note.id && "ring-2 ring-blue-500",
               isDragging && "opacity-50"
             )}
@@ -742,8 +758,8 @@ const NotesPage: React.FC = () => {
             }}
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
-              <div className="flex items-center">
+              <h3 className="font-semibold text-gray-900 truncate">{note.title}</h3>
+              <div className="flex items-center space-x-1">
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -795,22 +811,45 @@ const NotesPage: React.FC = () => {
                 </DropdownMenu>
               </div>
             </div>
-            <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
+            
+            <div className="min-h-[60px]">
+              <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
+            </div>
+            
             {note.labels && note.labels.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-3">
+              <div className="flex flex-wrap gap-1 mt-3 mb-2">
                 {note.labels.map(label => (
                   <div 
                     key={label.id}
-                    className="px-2 py-0.5 rounded-full text-xs"
-                    style={{ backgroundColor: `${label.color}20`, color: label.color }}
+                    className="px-2 py-0.5 rounded-full text-xs font-medium flex items-center"
+                    style={{ 
+                      backgroundColor: `${label.color}20`, 
+                      color: label.color,
+                      border: `1px solid ${label.color}40` 
+                    }}
                   >
+                    <span className="mr-1 inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label.color }}></span>
                     {label.name}
                   </div>
                 ))}
               </div>
             )}
-            <div className="text-xs text-gray-500 mt-3">
-              {new Date(note.updatedAt).toLocaleDateString()}
+            
+            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
+              <div className="text-xs text-gray-500">
+                {new Date(note.updatedAt).toLocaleDateString(undefined, { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </div>
+              
+              {note.folderId && (
+                <div className="text-xs text-gray-500 flex items-center">
+                  <Folder size={12} className="mr-1 text-gray-400" />
+                  {folders.find(f => f.id === note.folderId)?.name || "Folder"}
+                </div>
+              )}
             </div>
           </div>
         </ContextMenuTrigger>
@@ -903,7 +942,10 @@ const NotesPage: React.FC = () => {
                           selectedFolder === null && "bg-blue-50",
                           isOver && "bg-blue-100 ring-2 ring-blue-300"
                         )}
-                        onClick={() => setSelectedFolder(null)}
+                        onClick={() => {
+                          setSelectedFolder(null);
+                          setSelectedLabel(null);
+                        }}
                       >
                         <File size={16} className={cn("mr-2", isOver ? "text-blue-600" : "text-gray-500")} />
                         <span>All Notes</span>
@@ -945,13 +987,41 @@ const NotesPage: React.FC = () => {
                     </Button>
                   </div>
                   
+                  <div 
+                    className={cn(
+                      "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
+                      selectedLabel === null && "bg-blue-50 font-medium"
+                    )}
+                    onClick={() => setSelectedLabel(null)}
+                  >
+                    <Tag size={16} className="mr-2 text-gray-500" />
+                    <span>All Labels</span>
+                  </div>
+                  
                   {labels.map(label => (
                     <div 
                       key={label.id} 
-                      className="flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100"
+                      className={cn(
+                        "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
+                        selectedLabel === label.id && "bg-blue-50 font-medium"
+                      )}
+                      onClick={() => setSelectedLabel(label.id)}
                     >
                       <Tag size={16} className="mr-2" style={{ color: label.color }} />
                       <span>{label.name}</span>
+                      <div className="ml-auto hidden group-hover:flex">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDialog('label', label);
+                          }}
+                        >
+                          <Edit size={14} />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1023,15 +1093,39 @@ const NotesPage: React.FC = () => {
           
           <div className="grid gap-4 py-4">
             {dialogType === 'folder' && (
-              <div className="grid gap-2">
-                <Label htmlFor="name">Folder Name</Label>
-                <Input
-                  id="name"
-                  value={dialogData.name || ''}
-                  onChange={(e) => setDialogData({ ...dialogData, name: e.target.value })}
-                  placeholder="Enter folder name"
-                />
-              </div>
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Folder Name</Label>
+                  <Input
+                    id="name"
+                    value={dialogData.name || ''}
+                    onChange={(e) => setDialogData({ ...dialogData, name: e.target.value })}
+                    placeholder="Enter folder name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="parentFolder">Parent Folder</Label>
+                  <select
+                    id="parentFolder"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={dialogData.parentId || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDialogData({ 
+                        ...dialogData, 
+                        parentId: value === "" ? null : parseInt(value) 
+                      });
+                    }}
+                  >
+                    <option value="">None (Root folder)</option>
+                    {folders.map(folder => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
             
             {dialogType === 'note' && (
@@ -1055,6 +1149,67 @@ const NotesPage: React.FC = () => {
                     onChange={(e) => setDialogData({ ...dialogData, content: e.target.value })}
                     placeholder="Enter note content"
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="folder">Folder</Label>
+                  <select
+                    id="folder"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={dialogData.folderId || selectedFolder || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDialogData({ 
+                        ...dialogData, 
+                        folderId: value === "" ? null : parseInt(value) 
+                      });
+                    }}
+                  >
+                    <option value="">None (All Notes)</option>
+                    {folders.map(folder => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Labels</Label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {labels.map(label => (
+                      <div
+                        key={label.id}
+                        onClick={() => {
+                          const selectedLabels = dialogData.labels || [];
+                          const labelIndex = selectedLabels.findIndex((l: ILabel) => l.id === label.id);
+                          
+                          if (labelIndex >= 0) {
+                            // Remove label if already selected
+                            const newLabels = [...selectedLabels];
+                            newLabels.splice(labelIndex, 1);
+                            setDialogData({ ...dialogData, labels: newLabels });
+                          } else {
+                            // Add label if not selected
+                            setDialogData({ 
+                              ...dialogData, 
+                              labels: [...selectedLabels, label] 
+                            });
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-full text-sm cursor-pointer flex items-center ${
+                          (dialogData.labels || []).some((l: ILabel) => l.id === label.id)
+                            ? "ring-2 ring-offset-1"
+                            : "opacity-70"
+                        }`}
+                        style={{ 
+                          backgroundColor: `${label.color}20`, 
+                          color: label.color,
+                          borderColor: label.color
+                        }}
+                      >
+                        {label.name}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
