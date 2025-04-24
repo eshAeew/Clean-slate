@@ -9,7 +9,9 @@ import {
   useSensor, 
   useSensors, 
   PointerSensor,
-  MouseSensor
+  MouseSensor,
+  useDraggable,
+  useDroppable
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Link, useLocation } from "wouter";
@@ -543,18 +545,28 @@ const NotesPage: React.FC = () => {
     setActiveItem(null);
   };
   
-  // Render each folder and its subfolders recursively
-  const renderFolder = (folder: IFolder, level = 0) => {
+  // Component for a droppable folder
+  const DroppableFolder = ({ folder, level }: { folder: IFolder, level: number }) => {
     const paddingLeft = level * 16;
     
+    // Setup the droppable area
+    const { isOver, setNodeRef } = useDroppable({
+      id: `folder-${folder.id}`,
+      data: {
+        id: folder.id,
+        type: 'folder'
+      }
+    });
+    
     return (
-      <div key={folder.id}>
+      <div ref={setNodeRef}>
         <ContextMenu>
           <ContextMenuTrigger className="block">
             <div 
               className={cn(
                 "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100 group",
-                selectedFolder === folder.id && "bg-blue-50"
+                selectedFolder === folder.id && "bg-blue-50",
+                isOver && "bg-blue-100 ring-2 ring-blue-300" // Highlight when dragging over
               )}
               style={{ paddingLeft: `${paddingLeft + 8}px` }}
               onClick={() => setSelectedFolder(folder.id)}
@@ -572,7 +584,7 @@ const NotesPage: React.FC = () => {
                   <span className="w-4"></span>
                 )}
               </div>
-              <Folder size={16} className="mr-2 text-blue-500" />
+              <Folder size={16} className={cn("mr-2", isOver ? "text-blue-600" : "text-blue-500")} />
               <span className="flex-1 truncate">{folder.name}</span>
               <div className="hidden group-hover:flex">
                 <Button 
@@ -619,6 +631,136 @@ const NotesPage: React.FC = () => {
       </div>
     );
   };
+
+  // Component for a draggable note card
+  const DraggableNote = ({ note }: { note: INote }) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+      id: `note-${note.id}`,
+      data: {
+        id: note.id,
+        type: 'note'
+      }
+    });
+    
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div 
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className={cn(
+              "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
+              selectedNote === note.id && "ring-2 ring-blue-500",
+              isDragging && "opacity-50"
+            )}
+            onClick={() => setSelectedNote(note.id)}
+            onDoubleClick={() => openNoteInEditor(note)}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn(
+                    "h-7 w-7",
+                    note.isPinned ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePinNote(note.id);
+                  }}
+                >
+                  <Star size={16} fill={note.isPinned ? "#EAB308" : "none"} />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <MoreVertical size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openDialog('note', note)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Edit</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openNoteInEditor(note)}>
+                      <File className="mr-2 h-4 w-4" />
+                      <span>Open in Editor</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Copy className="mr-2 h-4 w-4" />
+                      <span>Duplicate</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => archiveNote(note.id)}>
+                      <Archive className="mr-2 h-4 w-4" />
+                      <span>Archive</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Move to Trash</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
+            {note.labels && note.labels.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-3">
+                {note.labels.map(label => (
+                  <div 
+                    key={label.id}
+                    className="px-2 py-0.5 rounded-full text-xs"
+                    style={{ backgroundColor: `${label.color}20`, color: label.color }}
+                  >
+                    {label.name}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="text-xs text-gray-500 mt-3">
+              {new Date(note.updatedAt).toLocaleDateString()}
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => openDialog('note', note)}>
+            <Edit className="mr-2 h-4 w-4" />
+            <span>Edit</span>
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => openNoteInEditor(note)}>
+            <File className="mr-2 h-4 w-4" />
+            <span>Open in Editor</span>
+          </ContextMenuItem>
+          <ContextMenuItem>
+            <Copy className="mr-2 h-4 w-4" />
+            <span>Duplicate</span>
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={() => archiveNote(note.id)}>
+            <Archive className="mr-2 h-4 w-4" />
+            <span>Archive</span>
+          </ContextMenuItem>
+          <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            <span>Move to Trash</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  };
+
+  // Render each folder and its subfolders recursively
+  const renderFolder = (folder: IFolder, level = 0) => {
+    return <DroppableFolder folder={folder} level={level} />;
+  };
   
   return (
     <div className="flex h-screen bg-gray-50">
@@ -659,16 +801,31 @@ const NotesPage: React.FC = () => {
               >
                 {/* Fixed sections */}
                 <div className="mb-4">
-                  <div 
-                    className={cn(
-                      "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
-                      selectedFolder === null && "bg-blue-50"
-                    )}
-                    onClick={() => setSelectedFolder(null)}
-                  >
-                    <File size={16} className="mr-2 text-gray-500" />
-                    <span>All Notes</span>
-                  </div>
+                  {/* Make "All Notes" a droppable target */}
+                  {(() => {
+                    const { isOver, setNodeRef } = useDroppable({
+                      id: `all-notes`,
+                      data: {
+                        id: null,
+                        type: 'all-notes'
+                      }
+                    });
+                    
+                    return (
+                      <div 
+                        ref={setNodeRef}
+                        className={cn(
+                          "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100",
+                          selectedFolder === null && "bg-blue-50",
+                          isOver && "bg-blue-100 ring-2 ring-blue-300"
+                        )}
+                        onClick={() => setSelectedFolder(null)}
+                      >
+                        <File size={16} className={cn("mr-2", isOver ? "text-blue-600" : "text-gray-500")} />
+                        <span>All Notes</span>
+                      </div>
+                    );
+                  })()}
                 </div>
                 
                 {/* Folders section */}
@@ -749,110 +906,7 @@ const NotesPage: React.FC = () => {
                 {filteredNotes
                   .filter(note => note.isPinned)
                   .map(note => (
-                    <ContextMenu key={note.id}>
-                      <ContextMenuTrigger>
-                        <div 
-                          className={cn(
-                            "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
-                            selectedNote === note.id && "ring-2 ring-blue-500"
-                          )}
-                          onClick={() => setSelectedNote(note.id)}
-                          onDoubleClick={() => openNoteInEditor(note)}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
-                            <div className="flex items-center">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-7 w-7 text-yellow-500"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePinNote(note.id);
-                                }}
-                              >
-                                <Star size={16} fill="#EAB308" />
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7"
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    <MoreVertical size={16} />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openDialog('note', note)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    <span>Edit</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openNoteInEditor(note)}>
-                                    <File className="mr-2 h-4 w-4" />
-                                    <span>Open in Editor</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>Duplicate</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => archiveNote(note.id)}>
-                                    <Archive className="mr-2 h-4 w-4" />
-                                    <span>Archive</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    <span>Move to Trash</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                          <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
-                          {note.labels && note.labels.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-3">
-                              {note.labels.map(label => (
-                                <div 
-                                  key={label.id}
-                                  className="px-2 py-0.5 rounded-full text-xs"
-                                  style={{ backgroundColor: `${label.color}20`, color: label.color }}
-                                >
-                                  {label.name}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-500 mt-3">
-                            {new Date(note.updatedAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem onClick={() => openDialog('note', note)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          <span>Edit</span>
-                        </ContextMenuItem>
-                        <ContextMenuItem onClick={() => openNoteInEditor(note)}>
-                          <File className="mr-2 h-4 w-4" />
-                          <span>Open in Editor</span>
-                        </ContextMenuItem>
-                        <ContextMenuItem>
-                          <Copy className="mr-2 h-4 w-4" />
-                          <span>Duplicate</span>
-                        </ContextMenuItem>
-                        <ContextMenuSeparator />
-                        <ContextMenuItem onClick={() => archiveNote(note.id)}>
-                          <Archive className="mr-2 h-4 w-4" />
-                          <span>Archive</span>
-                        </ContextMenuItem>
-                        <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Move to Trash</span>
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
+                    <DraggableNote key={note.id} note={note} />
                   ))}
               </div>
             </div>
@@ -865,110 +919,7 @@ const NotesPage: React.FC = () => {
               {filteredNotes
                 .filter(note => !note.isPinned)
                 .map(note => (
-                  <ContextMenu key={note.id}>
-                    <ContextMenuTrigger>
-                      <div 
-                        className={cn(
-                          "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
-                          selectedNote === note.id && "ring-2 ring-blue-500"
-                        )}
-                        onClick={() => setSelectedNote(note.id)}
-                        onDoubleClick={() => openNoteInEditor(note)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
-                          <div className="flex items-center">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7 text-gray-400 hover:text-yellow-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                togglePinNote(note.id);
-                              }}
-                            >
-                              <Star size={16} />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-7 w-7"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <MoreVertical size={16} />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openDialog('note', note)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  <span>Edit</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openNoteInEditor(note)}>
-                                  <File className="mr-2 h-4 w-4" />
-                                  <span>Open in Editor</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  <span>Duplicate</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => archiveNote(note.id)}>
-                                  <Archive className="mr-2 h-4 w-4" />
-                                  <span>Archive</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  <span>Move to Trash</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                        <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
-                        {note.labels && note.labels.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {note.labels.map(label => (
-                              <div 
-                                key={label.id}
-                                className="px-2 py-0.5 rounded-full text-xs"
-                                style={{ backgroundColor: `${label.color}20`, color: label.color }}
-                              >
-                                {label.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-3">
-                          {new Date(note.updatedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent>
-                      <ContextMenuItem onClick={() => openDialog('note', note)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => openNoteInEditor(note)}>
-                        <File className="mr-2 h-4 w-4" />
-                        <span>Open in Editor</span>
-                      </ContextMenuItem>
-                      <ContextMenuItem>
-                        <Copy className="mr-2 h-4 w-4" />
-                        <span>Duplicate</span>
-                      </ContextMenuItem>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem onClick={() => archiveNote(note.id)}>
-                        <Archive className="mr-2 h-4 w-4" />
-                        <span>Archive</span>
-                      </ContextMenuItem>
-                      <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Move to Trash</span>
-                      </ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
+                  <DraggableNote key={note.id} note={note} />
                 ))}
             </div>
           </div>
