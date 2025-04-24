@@ -50,6 +50,24 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     const model = editor.getModel();
     if (!model) return;
     
+    // Get current selection
+    const selection = editor.getSelection();
+    if (!selection) return;
+    
+    // Create an edit operation
+    const editOperation = (text: string) => {
+      editor.executeEdits('', [
+        {
+          range: selection,
+          text: text,
+          forceMoveMarkers: true
+        }
+      ]);
+    };
+    
+    // Get selected text
+    const selectedText = model.getValueInRange(selection);
+    
     switch (action) {
       case 'undo':
         editor.trigger('keyboard', 'undo', null);
@@ -91,6 +109,54 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         break;
       case 'outdent':
         editor.trigger('keyboard', 'outdent', null);
+        break;
+      case 'bold':
+        // Wrap the selected text with markdown bold syntax
+        editOperation(`**${selectedText}**`);
+        break;
+      case 'italic':
+        // Wrap the selected text with markdown italic syntax
+        editOperation(`*${selectedText}*`);
+        break;
+      case 'underline':
+        // Use HTML-like syntax for underline since markdown doesn't have native underline
+        editOperation(`<u>${selectedText}</u>`);
+        break;
+      case 'alignLeft':
+        // Apply left alignment to the selected lines
+        const leftAlignedText = selectedText.split('\n').map(line => line.trimStart()).join('\n');
+        editOperation(leftAlignedText);
+        break;
+      case 'alignCenter':
+        // Apply center alignment (using spaces for simplicity)
+        const maxLength = Math.max(...selectedText.split('\n').map(line => line.trim().length));
+        const centeredText = selectedText.split('\n').map(line => {
+          const trimmedLine = line.trim();
+          const padding = Math.max(0, Math.floor((maxLength - trimmedLine.length) / 2));
+          return ' '.repeat(padding) + trimmedLine;
+        }).join('\n');
+        editOperation(centeredText);
+        break;
+      case 'alignRight':
+        // Apply right alignment (using spaces)
+        const lines = selectedText.split('\n');
+        const maxLineLength = Math.max(...lines.map(line => line.trim().length));
+        const rightAlignedText = lines.map(line => {
+          const trimmedLine = line.trim();
+          const padding = Math.max(0, maxLineLength - trimmedLine.length);
+          return ' '.repeat(padding) + trimmedLine;
+        }).join('\n');
+        editOperation(rightAlignedText);
+        break;
+      case 'bulletList':
+        // Convert each line to a bullet point
+        const bulletPoints = selectedText.split('\n').map(line => `• ${line.trim()}`).join('\n');
+        editOperation(bulletPoints);
+        break;
+      case 'numberedList':
+        // Convert each line to a numbered list item
+        const numberedList = selectedText.split('\n').map((line, index) => `${index + 1}. ${line.trim()}`).join('\n');
+        editOperation(numberedList);
         break;
       default:
         break;
