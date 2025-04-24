@@ -98,7 +98,7 @@ greet();`
       <Header 
         onSettingsClick={() => setShowSettings(true)}
         onNewFile={newFile}
-        onDownload={downloadContent}
+        onDownload={() => setShowExportDialog(true)}
         onSearch={handleSearch}
         onFormat={handleFormat}
       />
@@ -132,6 +132,12 @@ greet();`
           onUpdateOptions={updateEditorOptions}
         />
       )}
+
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        onExport={(fileType) => downloadContent(fileType)}
+      />
     </div>
   );
 };

@@ -3,13 +3,13 @@ export const DEFAULT_EDITOR_OPTIONS = {
   fontFamily: 'Consolas, Monaco, "Courier New", monospace',
   lineHeight: 1.5,
   minimap: { enabled: false },
-  wordWrap: 'on',
+  wordWrap: 'on' as const,
   theme: 'vs',
   scrollbar: {
     verticalScrollbarSize: 10,
     horizontalScrollbarSize: 10
   },
-  lineNumbers: 'on',
+  lineNumbers: 'on' as const,
   glyphMargin: false,
   folding: true,
   scrollBeyondLastLine: false,
