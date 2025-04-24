@@ -25,7 +25,7 @@ const TaskManagerButton: React.FC<TaskManagerButtonProps> = ({ onClick }) => {
 const StyledWrapper = styled.div`
   .ui-btn {
     --btn-default-bg: rgb(41, 41, 41);
-    --btn-padding: 15px 20px;
+    --btn-padding: 11px 15px; /* 25% smaller padding */
     --btn-hover-bg: rgb(51, 51, 51);
     --btn-transition: .3s;
     --btn-letter-spacing: .1rem;
@@ -34,7 +34,7 @@ const StyledWrapper = styled.div`
     --btn-shadow: 0 2px 10px 0 var(--btn-shadow-color);
     --hover-btn-color: #FAC921;
     --default-btn-color: #fff;
-    --font-size: 16px;
+    --font-size: 12px; /* 25% smaller font */
     /* 👆 this field should not be empty */
     --font-weight: 600;
     --font-family: Menlo,Roboto Mono,monospace;
