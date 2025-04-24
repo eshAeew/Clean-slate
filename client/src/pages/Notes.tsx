@@ -30,7 +30,8 @@ import {
   Copy,
   ChevronRight,
   ChevronDown,
-  Search
+  Search,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1150,11 +1151,22 @@ const NotesPage: React.FC = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         {/* Header Section */}
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold">{viewArchived ? "Archive" : "Notes"}</h1>
-          {viewArchived && (
-            <p className="text-sm text-gray-500 mt-1">Archived notes are stored here. Restore them to make them active again.</p>
-          )}
+        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">{viewArchived ? "Archive" : "Notes"}</h1>
+            {viewArchived && (
+              <p className="text-sm text-gray-500 mt-1">Archived notes are stored here. Restore them to make them active again.</p>
+            )}
+          </div>
+          <a 
+            href="https://pro-taskmanager.netlify.app" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="mt-3 sm:mt-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+          >
+            <ExternalLink size={16} className="mr-2" />
+            Task Manager
+          </a>
         </div>
         
         {/* Notes list */}
