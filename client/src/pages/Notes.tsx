@@ -30,8 +30,7 @@ import {
   Copy,
   ChevronRight,
   ChevronDown,
-  Search,
-  ExternalLink
+  Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1158,15 +1157,16 @@ const NotesPage: React.FC = () => {
               <p className="text-sm text-gray-500 mt-1">Archived notes are stored here. Restore them to make them active again.</p>
             )}
           </div>
-          <a 
-            href="https://pro-taskmanager.netlify.app" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="mt-3 sm:mt-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+          <button 
+            className="mt-3 sm:mt-0 ui-btn"
+            onClick={() => {
+              window.location.href = "https://pro-taskmanager.netlify.app";
+            }}
           >
-            <ExternalLink size={16} className="mr-2" />
-            Task Manager
-          </a>
+            <span>
+              Task Manager
+            </span>
+          </button>
         </div>
         
         {/* Notes list */}
