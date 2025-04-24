@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import EditorStatusBar from "@/components/EditorStatusBar";
+import EditorToolbar from "@/components/EditorToolbar";
 import SettingsModal from "@/components/SettingsModal";
 import ExportDialog from "@/components/ExportDialog";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -112,6 +113,8 @@ greet();`
       
       <main className="flex-1 overflow-hidden flex p-3 bg-gray-50">
         <div className="flex-1 flex flex-col h-full bg-white rounded-lg editor-container">
+          <EditorToolbar onFormat={handleFormat} />
+          
           <div className="flex-1 relative">
             <Editor
               height="100%"

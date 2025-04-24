@@ -191,7 +191,7 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
           range: new Range(startLine, codeBlockMatch.index + 4, endLine, 1),
           options: {
             inlineClassName: 'editor-code-block',
-            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            stickiness: 2 // NeverGrowsWhenTypingAtEdges
           }
         });
       }
