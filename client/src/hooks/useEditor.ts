@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { editor as monacoEditor } from 'monaco-editor';
+import { editor as monacoEditor, Range, TrackedRangeStickiness } from 'monaco-editor';
 import { generateTextStats, downloadTextFile } from '@/lib/editorHelpers';
 
 type EditorRef = monacoEditor.IStandaloneCodeEditor | null;
@@ -7,12 +7,19 @@ type EditorRef = monacoEditor.IStandaloneCodeEditor | null;
 const useEditor = (initialContent: string, setContent: (content: string) => void) => {
   const editorRef = useRef<EditorRef>(null);
   const [stats, setStats] = useState(generateTextStats(initialContent));
+  const decorationsRef = useRef<string[]>([]);
 
   const handleEditorDidMount = (editor: monacoEditor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
     
     // Update stats on initial mount
     updateStats(initialContent);
+    
+    // Initial styling when editor is mounted
+    const model = editor.getModel();
+    if (model) {
+      processAllMarkdownStyling(model, editor);
+    }
   };
 
   const handleContentChange = (value: string | undefined) => {
@@ -20,32 +27,53 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     setContent(newContent);
     updateStats(newContent);
     
-    // Check for live markdown formatting if the editor is available
+    // Apply markdown styling to the entire document on content change
     if (editorRef.current) {
       const editor = editorRef.current;
       const model = editor.getModel();
       if (!model) return;
       
-      // Get current position
-      const position = editor.getPosition();
-      if (!position) return;
-      
-      // Get the line content
-      const lineContent = model.getLineContent(position.lineNumber);
-      
-      // Process Markdown-style formatting
-      processMarkdownStyling(lineContent, position.lineNumber, model, editor);
+      // Process the entire document for markdown styling
+      processAllMarkdownStyling(model, editor);
     }
   };
   
-  // Process markdown styling and apply decorations
-  const processMarkdownStyling = (
-    lineContent: string, 
-    lineNumber: number, 
+  // Process all markdown styling in the document and apply decorations
+  const processAllMarkdownStyling = (
     model: monacoEditor.ITextModel, 
     editor: monacoEditor.IStandaloneCodeEditor
   ) => {
-    // Regular expressions for finding markdown patterns (simplified)
+    // Clear existing decorations
+    if (decorationsRef.current.length > 0) {
+      editor.deltaDecorations(decorationsRef.current, []);
+      decorationsRef.current = [];
+    }
+    
+    const decorations: monacoEditor.IModelDeltaDecoration[] = [];
+    const totalLines = model.getLineCount();
+    
+    // Process each line in the document
+    for (let lineNumber = 1; lineNumber <= totalLines; lineNumber++) {
+      const lineContent = model.getLineContent(lineNumber);
+      
+      // Apply formatting decorations for the line
+      processLineFormatting(lineNumber, lineContent, decorations, model);
+    }
+    
+    // Apply the decorations to the editor
+    if (decorations.length > 0) {
+      decorationsRef.current = editor.deltaDecorations([], decorations);
+    }
+  };
+
+  // Process a single line for formatting
+  const processLineFormatting = (
+    lineNumber: number,
+    lineContent: string,
+    decorations: monacoEditor.IModelDeltaDecoration[],
+    model: monacoEditor.ITextModel
+  ) => {
+    // Regular expressions for finding markdown patterns
     const boldRegex = /\*\*([^*]+)\*\*/g;
     const italicRegex = /\*([^*]+)\*/g;
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -55,57 +83,117 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     const codeBlockRegex = /```([^`]*)```/g;
     
     try {
-      // Find all matches for bold text
+      // Process bold text
       let boldMatch;
       while ((boldMatch = boldRegex.exec(lineContent)) !== null) {
-        // Log the detected pattern (in a production app, you would style this)
-        console.log('Bold text detected:', boldMatch[1]);
+        const startPos = boldMatch.index + 2; // Skip the first two **
+        const endPos = startPos + boldMatch[1].length;
+        
+        decorations.push({
+          range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+          options: {
+            inlineClassName: 'editor-bold',
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+          }
+        });
       }
       
-      // Find all matches for italic text (avoiding conflicts with bold)
-      // Only catch single asterisks that aren't part of double asterisks
+      // Process italic text (avoiding conflicts with bold)
       if (!lineContent.includes('**')) {
         let italicMatch;
         while ((italicMatch = italicRegex.exec(lineContent)) !== null) {
-          // Log the detected pattern
-          console.log('Italic text detected:', italicMatch[1]);
+          const startPos = italicMatch.index + 1; // Skip the first *
+          const endPos = startPos + italicMatch[1].length;
+          
+          decorations.push({
+            range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+            options: {
+              inlineClassName: 'editor-italic',
+              stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            }
+          });
         }
       }
       
-      // Find all matches for links
+      // Process links
       let linkMatch;
       while ((linkMatch = linkRegex.exec(lineContent)) !== null) {
         const text = linkMatch[1];
         const url = linkMatch[2];
+        const startPos = linkMatch.index + 1; // Skip the [
+        const endPos = startPos + text.length;
         
-        // Log the detected link
-        console.log('Link detected:', text, 'URL:', url);
+        decorations.push({
+          range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+          options: {
+            inlineClassName: 'editor-link',
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+            hoverMessage: { value: url }
+          }
+        });
       }
-
-      // Find all strikethrough text
+      
+      // Process strikethrough text
       let strikethroughMatch;
       while ((strikethroughMatch = strikethroughRegex.exec(lineContent)) !== null) {
-        console.log('Strikethrough text detected:', strikethroughMatch[1]);
+        const startPos = strikethroughMatch.index + 2; // Skip the ~~
+        const endPos = startPos + strikethroughMatch[1].length;
+        
+        decorations.push({
+          range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+          options: {
+            inlineClassName: 'editor-strikethrough',
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+          }
+        });
       }
-
-      // Find headings
+      
+      // Process headings
       const headingMatch = headingRegex.exec(lineContent);
       if (headingMatch) {
-        const level = headingMatch[1].length; // number of # symbols
+        const level = headingMatch[1].length; // Number of # symbols
         const headingText = headingMatch[2];
-        console.log(`Heading level ${level} detected:`, headingText);
+        const startPos = headingMatch.index + level + 1; // Skip the ### and space
+        const endPos = startPos + headingText.length;
+        
+        decorations.push({
+          range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+          options: {
+            inlineClassName: `editor-heading editor-h${level}`,
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+          }
+        });
       }
-
-      // Find inline code
+      
+      // Process inline code
       let codeMatch;
       while ((codeMatch = codeRegex.exec(lineContent)) !== null) {
-        console.log('Inline code detected:', codeMatch[1]);
+        const startPos = codeMatch.index + 1; // Skip the first `
+        const endPos = startPos + codeMatch[1].length;
+        
+        decorations.push({
+          range: new Range(lineNumber, startPos + 1, lineNumber, endPos + 1),
+          options: {
+            inlineClassName: 'editor-code',
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+          }
+        });
       }
-
-      // Find code blocks
+      
+      // Process code blocks - this is more complex as it spans multiple lines
       let codeBlockMatch;
       while ((codeBlockMatch = codeBlockRegex.exec(lineContent)) !== null) {
-        console.log('Code block detected:', codeBlockMatch[1]);
+        const blockContent = codeBlockMatch[1];
+        const startLine = lineNumber;
+        const endLine = lineNumber + blockContent.split('\n').length;
+        
+        decorations.push({
+          range: new Range(startLine, codeBlockMatch.index + 4, endLine, 1),
+          options: {
+            inlineClassName: 'editor-code-block',
+            stickiness: monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+          }
+        });
       }
     } catch (error) {
       console.error('Error processing markdown styling:', error);
