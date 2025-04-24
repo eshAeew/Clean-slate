@@ -28,13 +28,27 @@ const Navigation = () => {
   
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-      <Link href="/editor" onClick={handleNewNote}>
+      <Link href="/editor" onClick={handleNewNote} className="block relative group">
+        {/* Pulsing effect */}
+        <div className="absolute inset-0 rounded-full bg-blue-400 opacity-30 animate-pulse-ring group-hover:opacity-40"></div>
+        
+        {/* Main button */}
         <Button 
           size="icon" 
-          className="rounded-full h-14 w-14 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 shadow-xl transition-all duration-200 border-2 border-white dark:border-gray-800 flex items-center justify-center transform hover:scale-105"
+          className="relative rounded-full h-16 w-16 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 shadow-2xl transition-all duration-300 border-2 border-white/80 dark:border-gray-800/80 flex items-center justify-center transform hover:scale-110 hover:rotate-3"
           title="Create new note"
         >
-          <Edit className="h-7 w-7 text-white drop-shadow-sm" />
+          <div className="absolute inset-0 rounded-full bg-blue-400/20 animate-pulse"></div>
+          <div className="relative z-10 flex items-center justify-center">
+            <Edit className="h-7 w-7 text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300" />
+          </div>
+          
+          {/* Label tooltip */}
+          <div className="absolute right-full mr-3 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap transform translate-x-4 group-hover:translate-x-0 pointer-events-none">
+            Create new note
+            <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 rotate-45 w-2 h-2 bg-white dark:bg-gray-800"></div>
+          </div>
+          
           <span className="sr-only">Create new note</span>
         </Button>
       </Link>
