@@ -1,12 +1,28 @@
-import { pgTable, text, serial, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Folders to organize notes
+// Define folders first without parent reference
 export const folders = pgTable("folders", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  parentId: integer("parent_id").references(() => folders.id, { onDelete: "cascade" }), // For subfolders
+  parentId: integer("parent_id"), // Will define reference after
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Define parent reference after folder table is created
+// folders.parentId.references(() => folders.id, { onDelete: "cascade" });
+
+// Notes with enhanced features
+export const notes = pgTable("notes", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  folderId: integer("folder_id").references(() => folders.id, { onDelete: "set null" }),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  isTrashed: boolean("is_trashed").default(false).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -40,19 +56,6 @@ export type Label = typeof labels.$inferSelect;
 export const noteLabels = pgTable("note_labels", {
   noteId: integer("note_id").notNull().references(() => notes.id, { onDelete: "cascade" }),
   labelId: integer("label_id").notNull().references(() => labels.id, { onDelete: "cascade" }),
-});
-
-// Notes with enhanced features
-export const notes = pgTable("notes", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  folderId: integer("folder_id").references(() => folders.id, { onDelete: "set null" }), // Optional folder
-  isArchived: boolean("is_archived").default(false).notNull(),
-  isTrashed: boolean("is_trashed").default(false).notNull(),
-  isPinned: boolean("is_pinned").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertNoteSchema = createInsertSchema(notes).omit({
