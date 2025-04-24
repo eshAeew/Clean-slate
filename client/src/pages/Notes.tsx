@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { DndContext, DragOverlay, DragEndEvent, DragStartEvent, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   Folder, 
   File, 
@@ -194,6 +194,7 @@ type DialogType = 'folder' | 'note' | 'label' | null;
 
 const NotesPage: React.FC = () => {
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [folders, setFolders] = useState<IFolder[]>(MOCK_FOLDERS);
   const [notes, setNotes] = useState<INote[]>(MOCK_NOTES);
   const [labels, setLabels] = useState<ILabel[]>(MOCK_LABELS);
@@ -201,6 +202,15 @@ const NotesPage: React.FC = () => {
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  
+  // Function to open a note in the editor
+  const openNoteInEditor = (note: INote) => {
+    // Store the note in localStorage to be accessed from the editor page
+    localStorage.setItem('editingNote', JSON.stringify(note));
+    // Navigate to the editor page
+    setLocation('/');
+    toast({ description: "Opening note in editor" });
+  };
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -419,7 +429,7 @@ const NotesPage: React.FC = () => {
     const paddingLeft = level * 16;
     
     return (
-      <React.Fragment key={folder.id}>
+      <div key={folder.id}>
         <ContextMenu>
           <ContextMenuTrigger className="block">
             <div 
@@ -487,7 +497,7 @@ const NotesPage: React.FC = () => {
             {folder.children.map(childFolder => renderFolder(childFolder, level + 1))}
           </div>
         )}
-      </React.Fragment>
+      </div>
     );
   };
   
@@ -659,6 +669,10 @@ const NotesPage: React.FC = () => {
                                     <Edit className="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openNoteInEditor(note)}>
+                                    <File className="mr-2 h-4 w-4" />
+                                    <span>Open in Editor</span>
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem>
                                     <Copy className="mr-2 h-4 w-4" />
                                     <span>Duplicate</span>
@@ -806,6 +820,10 @@ const NotesPage: React.FC = () => {
                       <ContextMenuItem onClick={() => openDialog('note', note)}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Edit</span>
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => openNoteInEditor(note)}>
+                        <File className="mr-2 h-4 w-4" />
+                        <span>Open in Editor</span>
                       </ContextMenuItem>
                       <ContextMenuItem>
                         <Copy className="mr-2 h-4 w-4" />
