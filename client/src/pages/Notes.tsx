@@ -208,7 +208,7 @@ const NotesPage: React.FC = () => {
     // Store the note in localStorage to be accessed from the editor page
     localStorage.setItem('editingNote', JSON.stringify(note));
     // Navigate to the editor page
-    setLocation('/');
+    setLocation('/editor');
     toast({ description: "Opening note in editor" });
   };
   
@@ -714,6 +714,10 @@ const NotesPage: React.FC = () => {
                           <Edit className="mr-2 h-4 w-4" />
                           <span>Edit</span>
                         </ContextMenuItem>
+                        <ContextMenuItem onClick={() => openNoteInEditor(note)}>
+                          <File className="mr-2 h-4 w-4" />
+                          <span>Open in Editor</span>
+                        </ContextMenuItem>
                         <ContextMenuItem>
                           <Copy className="mr-2 h-4 w-4" />
                           <span>Duplicate</span>
@@ -779,6 +783,10 @@ const NotesPage: React.FC = () => {
                                 <DropdownMenuItem onClick={() => openDialog('note', note)}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openNoteInEditor(note)}>
+                                  <File className="mr-2 h-4 w-4" />
+                                  <span>Open in Editor</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
                                   <Copy className="mr-2 h-4 w-4" />
