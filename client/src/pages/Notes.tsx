@@ -420,65 +420,67 @@ const NotesPage: React.FC = () => {
     
     return (
       <React.Fragment key={folder.id}>
-        <ContextMenuTrigger className="block">
-          <div 
-            className={cn(
-              "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100 group",
-              selectedFolder === folder.id && "bg-blue-50"
-            )}
-            style={{ paddingLeft: `${paddingLeft + 8}px` }}
-            onClick={() => setSelectedFolder(folder.id)}
-          >
+        <ContextMenu>
+          <ContextMenuTrigger className="block">
             <div 
-              className="mr-1 text-gray-500 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleFolderExpansion(folder.id);
-              }}
-            >
-              {folder.children && folder.children.length > 0 ? (
-                folder.isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
-              ) : (
-                <span className="w-4"></span>
+              className={cn(
+                "flex items-center py-1 px-2 rounded-md cursor-pointer hover:bg-gray-100 group",
+                selectedFolder === folder.id && "bg-blue-50"
               )}
-            </div>
-            <Folder size={16} className="mr-2 text-blue-500" />
-            <span className="flex-1 truncate">{folder.name}</span>
-            <div className="hidden group-hover:flex">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6"
+              style={{ paddingLeft: `${paddingLeft + 8}px` }}
+              onClick={() => setSelectedFolder(folder.id)}
+            >
+              <div 
+                className="mr-1 text-gray-500 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openDialog('folder', folder);
+                  toggleFolderExpansion(folder.id);
                 }}
               >
-                <Edit size={14} />
-              </Button>
+                {folder.children && folder.children.length > 0 ? (
+                  folder.isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+                ) : (
+                  <span className="w-4"></span>
+                )}
+              </div>
+              <Folder size={16} className="mr-2 text-blue-500" />
+              <span className="flex-1 truncate">{folder.name}</span>
+              <div className="hidden group-hover:flex">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDialog('folder', folder);
+                  }}
+                >
+                  <Edit size={14} />
+                </Button>
+              </div>
             </div>
-          </div>
-        </ContextMenuTrigger>
-        
-        <ContextMenuContent>
-          <ContextMenuItem onClick={() => openDialog('note', { folderId: folder.id })}>
-            <File className="mr-2 h-4 w-4" />
-            <span>New Note</span>
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => openDialog('folder', { parentId: folder.id })}>
-            <Folder className="mr-2 h-4 w-4" />
-            <span>New Subfolder</span>
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onClick={() => openDialog('folder', folder)}>
-            <Edit className="mr-2 h-4 w-4" />
-            <span>Rename</span>
-          </ContextMenuItem>
-          <ContextMenuItem className="text-red-600" onClick={() => deleteFolder(folder.id)}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span>Delete</span>
-          </ContextMenuItem>
-        </ContextMenuContent>
+          </ContextMenuTrigger>
+          
+          <ContextMenuContent>
+            <ContextMenuItem onClick={() => openDialog('note', { folderId: folder.id })}>
+              <File className="mr-2 h-4 w-4" />
+              <span>New Note</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => openDialog('folder', { parentId: folder.id })}>
+              <Folder className="mr-2 h-4 w-4" />
+              <span>New Subfolder</span>
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={() => openDialog('folder', folder)}>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>Rename</span>
+            </ContextMenuItem>
+            <ContextMenuItem className="text-red-600" onClick={() => deleteFolder(folder.id)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
         
         {folder.isExpanded && folder.children && folder.children.length > 0 && (
           <div>
@@ -618,7 +620,115 @@ const NotesPage: React.FC = () => {
                 {filteredNotes
                   .filter(note => note.isPinned)
                   .map(note => (
-                    <ContextMenuTrigger key={note.id}>
+                    <ContextMenu key={note.id}>
+                      <ContextMenuTrigger>
+                        <div 
+                          className={cn(
+                            "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
+                            selectedNote === note.id && "ring-2 ring-blue-500"
+                          )}
+                          onClick={() => setSelectedNote(note.id)}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
+                            <div className="flex items-center">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-yellow-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePinNote(note.id);
+                                }}
+                              >
+                                <Star size={16} fill="#EAB308" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-7 w-7"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <MoreVertical size={16} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => openDialog('note', note)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Duplicate</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => archiveNote(note.id)}>
+                                    <Archive className="mr-2 h-4 w-4" />
+                                    <span>Archive</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Move to Trash</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
+                          {note.labels && note.labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {note.labels.map(label => (
+                                <div 
+                                  key={label.id}
+                                  className="px-2 py-0.5 rounded-full text-xs"
+                                  style={{ backgroundColor: `${label.color}20`, color: label.color }}
+                                >
+                                  {label.name}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500 mt-3">
+                            {new Date(note.updatedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem onClick={() => openDialog('note', note)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Edit</span>
+                        </ContextMenuItem>
+                        <ContextMenuItem>
+                          <Copy className="mr-2 h-4 w-4" />
+                          <span>Duplicate</span>
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={() => archiveNote(note.id)}>
+                          <Archive className="mr-2 h-4 w-4" />
+                          <span>Archive</span>
+                        </ContextMenuItem>
+                        <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Move to Trash</span>
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Other notes */}
+          <div>
+            <h2 className="text-xs font-medium text-gray-500 uppercase mb-2">Notes</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredNotes
+                .filter(note => !note.isPinned)
+                .map(note => (
+                  <ContextMenu key={note.id}>
+                    <ContextMenuTrigger>
                       <div 
                         className={cn(
                           "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
@@ -632,13 +742,13 @@ const NotesPage: React.FC = () => {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-7 w-7 text-yellow-500"
+                              className="h-7 w-7 text-gray-400 hover:text-yellow-500"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 togglePinNote(note.id);
                               }}
                             >
-                              <Star size={16} fill="#EAB308" />
+                              <Star size={16} />
                             </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -692,92 +802,26 @@ const NotesPage: React.FC = () => {
                         </div>
                       </div>
                     </ContextMenuTrigger>
-                  ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Other notes */}
-          <div>
-            <h2 className="text-xs font-medium text-gray-500 uppercase mb-2">Notes</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredNotes
-                .filter(note => !note.isPinned)
-                .map(note => (
-                  <ContextMenuTrigger key={note.id}>
-                    <div 
-                      className={cn(
-                        "bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-shadow hover:shadow-md",
-                        selectedNote === note.id && "ring-2 ring-blue-500"
-                      )}
-                      onClick={() => setSelectedNote(note.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>
-                        <div className="flex items-center">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 text-gray-400 hover:text-yellow-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              togglePinNote(note.id);
-                            }}
-                          >
-                            <Star size={16} />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-7 w-7"
-                                onClick={e => e.stopPropagation()}
-                              >
-                                <MoreVertical size={16} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openDialog('note', note)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>Edit</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                <span>Duplicate</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => archiveNote(note.id)}>
-                                <Archive className="mr-2 h-4 w-4" />
-                                <span>Archive</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Move to Trash</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                      <p className="text-gray-600 text-sm line-clamp-3">{note.content}</p>
-                      {note.labels && note.labels.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {note.labels.map(label => (
-                            <div 
-                              key={label.id}
-                              className="px-2 py-0.5 rounded-full text-xs"
-                              style={{ backgroundColor: `${label.color}20`, color: label.color }}
-                            >
-                              {label.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-500 mt-3">
-                        {new Date(note.updatedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => openDialog('note', note)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Edit</span>
+                      </ContextMenuItem>
+                      <ContextMenuItem>
+                        <Copy className="mr-2 h-4 w-4" />
+                        <span>Duplicate</span>
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem onClick={() => archiveNote(note.id)}>
+                        <Archive className="mr-2 h-4 w-4" />
+                        <span>Archive</span>
+                      </ContextMenuItem>
+                      <ContextMenuItem className="text-red-600" onClick={() => moveNoteToTrash(note.id)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Move to Trash</span>
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
             </div>
           </div>
