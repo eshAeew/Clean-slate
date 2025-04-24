@@ -28,6 +28,7 @@ import {
   Star,
   Edit,
   Copy,
+  HelpCircle,
   ChevronRight,
   ChevronDown,
   Search
@@ -59,6 +60,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import TaskManagerButton from "@/components/TaskManagerButton";
+import { openUserGuide } from "@/components/UserGuide";
 
 // Types matching our schema
 interface IFolder {

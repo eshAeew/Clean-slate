@@ -9,6 +9,7 @@ import Notes from "@/pages/Notes";
 import { ThemeProvider } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Edit, FileText } from "lucide-react";
+import UserGuide from "@/components/UserGuide";
 
 // Navigation component
 const Navigation = () => {
@@ -38,6 +39,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
       <Navigation />
+      <UserGuide />
     </>
   );
 }
