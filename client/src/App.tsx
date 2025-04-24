@@ -27,14 +27,15 @@ const Navigation = () => {
   };
   
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
+    <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
       <Link href="/editor" onClick={handleNewNote}>
         <Button 
           size="icon" 
-          className="rounded-full h-12 w-12 bg-blue-600 hover:bg-blue-700 shadow-lg"
+          className="rounded-full h-14 w-14 bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 shadow-xl transition-all duration-200 border-2 border-white dark:border-gray-800 flex items-center justify-center transform hover:scale-105"
           title="Create new note"
         >
-          <Edit className="h-6 w-6" />
+          <Edit className="h-7 w-7 text-white drop-shadow-sm" />
+          <span className="sr-only">Create new note</span>
         </Button>
       </Link>
     </div>

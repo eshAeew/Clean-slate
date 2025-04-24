@@ -322,10 +322,15 @@ const NotepadEditor = () => {
       </main>
 
       {/* Back to Notes button with unsaved changes check */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
-        <Button size="icon" className="rounded-full h-12 w-12 bg-green-600 hover:bg-green-700 shadow-lg"
-          onClick={() => handleNavigation('/notes')}>
-          <i className="ri-arrow-left-line h-6 w-6 text-white"></i>
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <Button 
+          size="icon" 
+          className="rounded-full h-14 w-14 bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 shadow-xl transition-all duration-200 border-2 border-white dark:border-gray-800 flex items-center justify-center transform hover:scale-105"
+          onClick={() => handleNavigation('/notes')}
+          title="Back to notes"
+        >
+          <i className="ri-arrow-left-line h-7 w-7 text-white drop-shadow-sm"></i>
+          <span className="sr-only">Back to notes</span>
         </Button>
       </div>
 
@@ -346,19 +351,28 @@ const NotepadEditor = () => {
 
       {/* Unsaved Changes Dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md border-l-4 border-amber-500">
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Do you want to save them before leaving?
+            <AlertDialogTitle className="flex items-center text-lg font-semibold text-amber-600">
+              <i className="ri-error-warning-line mr-2 text-2xl"></i>
+              Unsaved Changes
+            </AlertDialogTitle>
+            <AlertDialogDescription className="pt-2 text-gray-600">
+              The document has been modified. Do you want to save your changes before leaving?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={discardChangesAndNavigate}>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel 
+              onClick={discardChangesAndNavigate}
+              className="hover:bg-gray-200 transition-colors"
+            >
               Don't Save
             </AlertDialogCancel>
-            <AlertDialogAction onClick={saveAndNavigate}>
-              Save
+            <AlertDialogAction 
+              onClick={saveAndNavigate}
+              className="bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              <i className="ri-save-line mr-1"></i> Save
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -366,10 +380,13 @@ const NotepadEditor = () => {
 
       {/* Save Note Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[450px] border-t-4 border-blue-500">
           <DialogHeader>
-            <DialogTitle>{saveAsNew ? 'Save as New Note' : 'Save Note'}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="flex items-center text-lg font-semibold text-blue-600">
+              <i className="ri-save-3-line mr-2 text-2xl"></i>
+              {saveAsNew ? 'Save as New Note' : 'Save Note'}
+            </DialogTitle>
+            <DialogDescription className="pt-1 text-gray-600">
               {saveAsNew 
                 ? 'Enter a title and select a folder to save your note.' 
                 : 'Update the existing note or save as a new note.'}
@@ -378,17 +395,23 @@ const NotepadEditor = () => {
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Note Title</Label>
+              <Label htmlFor="title" className="flex items-center text-sm font-medium">
+                <i className="ri-file-text-line mr-1 text-gray-500"></i> Note Title
+              </Label>
               <Input
                 id="title"
                 value={saveData.title}
                 onChange={(e) => setSaveData({...saveData, title: e.target.value})}
                 placeholder="Enter note title"
+                className="focus-visible:ring-blue-500"
+                autoFocus
               />
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="folder">Folder</Label>
+              <Label htmlFor="folder" className="flex items-center text-sm font-medium">
+                <i className="ri-folder-line mr-1 text-gray-500"></i> Folder
+              </Label>
               <Select
                 value={saveData.folderId?.toString() || 'none'}
                 onValueChange={(value) => setSaveData({
@@ -396,7 +419,7 @@ const NotepadEditor = () => {
                   folderId: value === 'none' ? null : parseInt(value)
                 })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-blue-500">
                   <SelectValue placeholder="Select a folder" />
                 </SelectTrigger>
                 <SelectContent>
@@ -412,17 +435,28 @@ const NotepadEditor = () => {
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             {!saveAsNew && editingNoteId && (
-              <Button variant="outline" onClick={() => setSaveAsNew(true)}>
-                Save as New
+              <Button 
+                variant="outline" 
+                onClick={() => setSaveAsNew(true)}
+                className="hover:bg-gray-100 transition-colors"
+              >
+                <i className="ri-file-copy-line mr-1"></i> Save as New
               </Button>
             )}
-            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setSaveDialogOpen(false)}
+              className="hover:bg-gray-100 transition-colors"
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveNote}>
-              Save
+            <Button 
+              onClick={handleSaveNote}
+              className="bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              <i className="ri-save-line mr-1"></i> Save
             </Button>
           </DialogFooter>
         </DialogContent>
