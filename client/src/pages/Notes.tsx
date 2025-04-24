@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { 
   DndContext, 
   DragOverlay, 
@@ -224,44 +222,21 @@ type DialogType = 'folder' | 'note' | 'label' | null;
 const NotesPage: React.FC = () => {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  
-  // Use React Query for API data fetching
-  const { 
-    data: folders = [], 
-    isLoading: isFoldersLoading 
-  } = useQuery({
-    queryKey: ['/api/folders'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/folders');
-      return response as IFolder[];
-    }
-  });
-
-  const { 
-    data: notes = [], 
-    isLoading: isNotesLoading 
-  } = useQuery({
-    queryKey: ['/api/notes'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/notes');
-      return response as INote[];
-    }
-  });
-
-  const { 
-    data: labels = [], 
-    isLoading: isLabelsLoading 
-  } = useQuery({
-    queryKey: ['/api/labels'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/labels');
-      return response as ILabel[];
-    }
+  // Load data from localStorage if available, otherwise use mock data
+  const [folders, setFolders] = useState<IFolder[]>(() => {
+    const savedFolders = localStorage.getItem('folders');
+    return savedFolders ? JSON.parse(savedFolders) : MOCK_FOLDERS;
   });
   
-  // Add UI state tracking for folder expansion
-  const [expandedFolderIds, setExpandedFolderIds] = useState<number[]>([]);
+  const [notes, setNotes] = useState<INote[]>(() => {
+    const savedNotes = localStorage.getItem('notes');
+    return savedNotes ? JSON.parse(savedNotes) : MOCK_NOTES;
+  });
+  
+  const [labels, setLabels] = useState<ILabel[]>(() => {
+    const savedLabels = localStorage.getItem('labels');
+    return savedLabels ? JSON.parse(savedLabels) : MOCK_LABELS;
+  });
   
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
@@ -353,88 +328,18 @@ const NotesPage: React.FC = () => {
     return rootFolders;
   };
 
-  // Set up mutations for database operations
-  const createNoteMutation = useMutation({
-    mutationFn: (newNote: Partial<INote>) => 
-      apiRequest('/api/notes', { method: 'POST', body: JSON.stringify(newNote) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      toast({ description: "Note created successfully" });
-    }
-  });
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('folders', JSON.stringify(folders));
+  }, [folders]);
   
-  const updateNoteMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<INote> }) => 
-      apiRequest(`/api/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      toast({ description: "Note updated successfully" });
-    }
-  });
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }, [notes]);
   
-  const deleteNoteMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/notes/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      toast({ description: "Note deleted successfully" });
-    }
-  });
-  
-  const createFolderMutation = useMutation({
-    mutationFn: (newFolder: Partial<IFolder>) => 
-      apiRequest('/api/folders', { method: 'POST', body: JSON.stringify(newFolder) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/folders'] });
-      toast({ description: "Folder created successfully" });
-    }
-  });
-  
-  const updateFolderMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<IFolder> }) => 
-      apiRequest(`/api/folders/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/folders'] });
-      toast({ description: "Folder updated successfully" });
-    }
-  });
-  
-  const deleteFolderMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/folders/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/folders'] });
-      toast({ description: "Folder deleted successfully" });
-    }
-  });
-  
-  const createLabelMutation = useMutation({
-    mutationFn: (newLabel: Partial<ILabel>) => 
-      apiRequest('/api/labels', { method: 'POST', body: JSON.stringify(newLabel) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/labels'] });
-      toast({ description: "Label created successfully" });
-    }
-  });
-  
-  const updateLabelMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ILabel> }) => 
-      apiRequest(`/api/labels/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/labels'] });
-      toast({ description: "Label updated successfully" });
-    }
-  });
-  
-  const deleteLabelMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/labels/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/labels'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notes'] });
-      toast({ description: "Label deleted successfully" });
-    }
-  });
+  useEffect(() => {
+    localStorage.setItem('labels', JSON.stringify(labels));
+  }, [labels]);
   
   // Filtered notes based on search, selected folder and label
   const filteredNotes = notes.filter(note => {
@@ -480,18 +385,22 @@ const NotesPage: React.FC = () => {
   
   // Function to toggle folder expansion
   const toggleFolderExpansion = (folderId: number) => {
-    setExpandedFolderIds(prev => {
-      if (prev.includes(folderId)) {
-        return prev.filter(id => id !== folderId);
-      } else {
-        return [...prev, folderId];
-      }
+    setFolders(prevFolders => {
+      return prevFolders.map(folder => {
+        if (folder.id === folderId) {
+          return { ...folder, isExpanded: !folder.isExpanded };
+        } else if (folder.children) {
+          const updatedChildren = folder.children.map(child => {
+            if (child.id === folderId) {
+              return { ...child, isExpanded: !child.isExpanded };
+            }
+            return child;
+          });
+          return { ...folder, children: updatedChildren };
+        }
+        return folder;
+      });
     });
-  };
-  
-  // Helper function to check if a folder is expanded
-  const isFolderExpanded = (folderId: number) => {
-    return expandedFolderIds.includes(folderId);
   };
   
   // Function to open dialog for creating or editing
@@ -506,60 +415,86 @@ const NotesPage: React.FC = () => {
     if (dialogType === 'folder') {
       if (dialogData.id) {
         // Edit existing folder
-        updateFolderMutation.mutate({ 
-          id: dialogData.id, 
-          data: { 
-            name: dialogData.name,
-            parentId: dialogData.parentId
-          } 
-        });
+        setFolders(prevFolders => 
+          prevFolders.map(folder => 
+            folder.id === dialogData.id ? 
+              { ...folder, name: dialogData.name, updatedAt: new Date().toISOString() } : 
+              folder
+          )
+        );
+        toast({ description: "Folder updated" });
       } else {
         // Create new folder
-        createFolderMutation.mutate({ 
+        const newFolder: IFolder = {
+          id: Math.max(...folders.map(f => f.id), 0) + 1,
           name: dialogData.name,
-          parentId: dialogData.parentId
-        });
+          parentId: dialogData.parentId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isExpanded: false
+        };
+        
+        setFolders(prevFolders => [...prevFolders, newFolder]);
+        toast({ description: "Folder created" });
       }
     } else if (dialogType === 'note') {
       if (dialogData.id) {
         // Edit existing note
-        updateNoteMutation.mutate({ 
-          id: dialogData.id, 
-          data: { 
-            title: dialogData.title, 
-            content: dialogData.content, 
-            folderId: dialogData.folderId !== undefined ? dialogData.folderId : null
-            // Labels will be handled separately
-          } 
-        });
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === dialogData.id ? 
+              { 
+                ...note, 
+                title: dialogData.title, 
+                content: dialogData.content, 
+                folderId: dialogData.folderId !== undefined ? dialogData.folderId : note.folderId,
+                labels: dialogData.labels || note.labels || [],
+                updatedAt: new Date().toISOString() 
+              } : 
+              note
+          )
+        );
+        toast({ description: "Note updated" });
       } else {
         // Create new note
-        createNoteMutation.mutate({ 
+        const newNote: INote = {
+          id: Math.max(...notes.map(n => n.id), 0) + 1,
           title: dialogData.title,
           content: dialogData.content,
           folderId: dialogData.folderId !== undefined ? dialogData.folderId : selectedFolder,
           isArchived: false,
           isTrashed: false,
-          isPinned: false
-          // Labels will be handled separately
-        });
+          isPinned: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          labels: dialogData.labels || []
+        };
+        
+        setNotes(prevNotes => [...prevNotes, newNote]);
+        toast({ description: "Note created" });
       }
     } else if (dialogType === 'label') {
       if (dialogData.id) {
         // Edit existing label
-        updateLabelMutation.mutate({ 
-          id: dialogData.id, 
-          data: { 
-            name: dialogData.name,
-            color: dialogData.color
-          } 
-        });
+        setLabels(prevLabels => 
+          prevLabels.map(label => 
+            label.id === dialogData.id ? 
+              { ...label, name: dialogData.name, color: dialogData.color } : 
+              label
+          )
+        );
+        toast({ description: "Label updated" });
       } else {
         // Create new label
-        createLabelMutation.mutate({ 
+        const newLabel: ILabel = {
+          id: Math.max(...labels.map(l => l.id), 0) + 1,
           name: dialogData.name,
-          color: dialogData.color
-        });
+          color: dialogData.color,
+          createdAt: new Date().toISOString()
+        };
+        
+        setLabels(prevLabels => [...prevLabels, newLabel]);
+        toast({ description: "Label created" });
       }
     }
     
@@ -599,11 +534,36 @@ const NotesPage: React.FC = () => {
   
   // Actual label deletion logic
   const deleteLabelAction = (labelId: number, hasNotes: boolean) => {
-    // If the label is used in notes, we need to update those notes first
-    // The database implementation should handle this with CASCADE delete for labels
-    // We'll just invoke the deletion and let the backend handle it
-
-    deleteLabelMutation.mutate(labelId);
+    if (hasNotes) {
+      // Remove the label from all notes that use it
+      setNotes(prevNotes => 
+        prevNotes.map(note => {
+          if (note.labels && note.labels.some(label => label.id === labelId)) {
+            return {
+              ...note,
+              labels: note.labels.filter(label => label.id !== labelId),
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return note;
+        })
+      );
+      
+      // Remove the label
+      setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
+      
+      toast({ 
+        description: "Label deleted and removed from notes",
+        duration: 3000
+      });
+    } else {
+      // Just delete the label as it's not used in any notes
+      setLabels(prevLabels => prevLabels.filter(label => label.id !== labelId));
+      toast({ 
+        description: "Label deleted",
+        duration: 2000
+      });
+    }
     
     // Reset selected label if we just deleted it
     if (selectedLabel === labelId) {
@@ -618,57 +578,76 @@ const NotesPage: React.FC = () => {
     
     if (hasNotes) {
       if (confirm("This folder contains notes. Deleting it will move all associated notes to the trash. Continue?")) {
-        // First update all notes in this folder to be trashed
-        notes.forEach(note => {
-          if (note.folderId === folderId) {
-            updateNoteMutation.mutate({
-              id: note.id,
-              data: { isTrashed: true }
-            });
-          }
-        });
+        // Move all notes in this folder to trash
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.folderId === folderId 
+              ? { ...note, isTrashed: true, updatedAt: new Date().toISOString() } 
+              : note
+          )
+        );
         
-        // Then delete the folder after a short delay to ensure notes are updated
-        setTimeout(() => {
-          deleteFolderMutation.mutate(folderId);
-        }, 300);
+        // Remove the folder
+        setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
+        
+        toast({ 
+          description: "Folder deleted and notes moved to trash",
+          duration: 3000
+        });
       }
     } else {
       // Just delete the folder as it has no notes
-      deleteFolderMutation.mutate(folderId);
+      setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
+      toast({ 
+        description: "Folder deleted",
+        duration: 2000
+      });
     }
   };
   
   // Function to edit a folder
   const editFolder = (folderId: number, newName: string) => {
-    updateFolderMutation.mutate({
-      id: folderId,
-      data: { name: newName }
+    setFolders(prevFolders => 
+      prevFolders.map(folder => 
+        folder.id === folderId 
+          ? { ...folder, name: newName, updatedAt: new Date().toISOString() } 
+          : folder
+      )
+    );
+    toast({ 
+      description: "Folder renamed",
+      duration: 2000
     });
   };
   
   // Function to move note to trash
   const moveNoteToTrash = (noteId: number) => {
-    updateNoteMutation.mutate({
-      id: noteId,
-      data: { isTrashed: true }
-    });
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, isTrashed: true } : note
+      )
+    );
+    toast({ description: "Note moved to trash" });
   };
   
   // Function to archive a note
   const archiveNote = (noteId: number) => {
-    updateNoteMutation.mutate({
-      id: noteId,
-      data: { isArchived: true }
-    });
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, isArchived: true, updatedAt: new Date().toISOString() } : note
+      )
+    );
+    toast({ description: "Note archived" });
   };
   
   // Function to unarchive a note
   const unarchiveNote = (noteId: number) => {
-    updateNoteMutation.mutate({
-      id: noteId,
-      data: { isArchived: false }
-    });
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, isArchived: false, updatedAt: new Date().toISOString() } : note
+      )
+    );
+    toast({ description: "Note restored from archive" });
   };
   
   // Function to duplicate a note
@@ -676,35 +655,40 @@ const NotesPage: React.FC = () => {
     const originalNote = notes.find(note => note.id === noteId);
     
     if (originalNote) {
-      createNoteMutation.mutate({
+      const newNote: INote = {
+        id: Math.max(...notes.map(n => n.id), 0) + 1,
         title: `${originalNote.title} (Copy)`,
         content: originalNote.content,
         folderId: originalNote.folderId,
         isArchived: false,
         isTrashed: false,
-        isPinned: false
-        // Labels will be handled separately
-      });
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        labels: originalNote.labels ? [...originalNote.labels] : []
+      };
+      
+      setNotes(prevNotes => [...prevNotes, newNote]);
+      toast({ description: "Note duplicated" });
     }
   };
   
   // Function to toggle pin status
   const togglePinNote = (noteId: number) => {
-    const note = notes.find(n => n.id === noteId);
-    if (note) {
-      updateNoteMutation.mutate({
-        id: noteId,
-        data: { isPinned: !note.isPinned }
-      });
-    }
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, isPinned: !note.isPinned } : note
+      )
+    );
   };
   
   // Move a note to a specific folder
   const moveNoteToFolder = (noteId: number, folderId: number | null) => {
-    updateNoteMutation.mutate({
-      id: noteId,
-      data: { folderId }
-    });
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === noteId ? { ...note, folderId: folderId, updatedAt: new Date().toISOString() } : note
+      )
+    );
     
     const folderName = folderId === null ? "All Notes" : 
       folders.find(f => f.id === folderId)?.name || "selected folder";
@@ -820,7 +804,7 @@ const NotesPage: React.FC = () => {
                 }}
               >
                 {folder.children && folder.children.length > 0 ? (
-                  isFolderExpanded(folder.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+                  folder.isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
                 ) : (
                   <span className="w-4"></span>
                 )}
@@ -864,7 +848,7 @@ const NotesPage: React.FC = () => {
           </ContextMenuContent>
         </ContextMenu>
         
-        {isFolderExpanded(folder.id) && folder.children && folder.children.length > 0 && (
+        {folder.isExpanded && folder.children && folder.children.length > 0 && (
           <div>
             {folder.children.map(childFolder => renderFolder(childFolder, level + 1))}
           </div>
