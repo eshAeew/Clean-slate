@@ -1048,7 +1048,18 @@ const NotesPage: React.FC = () => {
       {/* Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
         <div className="p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Notes</h1>
+          <div className="flex items-center">
+            <h1 className="text-xl font-bold">Notes</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-1"
+              onClick={() => openUserGuide()}
+              title="Help & Guide"
+            >
+              <HelpCircle size={16} className="text-gray-500" />
+            </Button>
+          </div>
           <Button 
             variant="ghost" 
             size="icon"
@@ -1231,6 +1242,19 @@ const NotesPage: React.FC = () => {
               </DndContext>
             </div>
           </ScrollArea>
+        </div>
+        
+        {/* Help button at the bottom of the sidebar */}
+        <div className="p-3 border-t border-gray-200">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full flex items-center justify-center text-gray-700"
+            onClick={openUserGuide}
+          >
+            <HelpCircle size={16} className="mr-2" />
+            Show User Guide
+          </Button>
         </div>
       </div>
       
