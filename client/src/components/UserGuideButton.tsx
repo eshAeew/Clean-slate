@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,50 +17,37 @@ import {
   Archive,
   Star,
   Move,
-  Copy
+  Copy,
+  HelpCircle
 } from "lucide-react";
 
-// This is for external components to open the guide
-export const openUserGuide = () => {
-  localStorage.removeItem('hasSeenGuide');
-  window.dispatchEvent(new Event('openUserGuide'));
-};
-
-export const UserGuide = () => {
+const UserGuideButton = () => {
   const [open, setOpen] = useState(false);
   
-  // Check if the guide has been shown before
-  useEffect(() => {
-    const hasSeenGuide = localStorage.getItem('hasSeenGuide');
-    if (!hasSeenGuide) {
-      setOpen(true);
-    }
-    
-    // Listen for external requests to open the guide
-    const handleOpenGuide = () => {
-      setOpen(true);
-    };
-    
-    window.addEventListener('openUserGuide', handleOpenGuide);
-    
-    return () => {
-      window.removeEventListener('openUserGuide', handleOpenGuide);
-    };
-  }, []);
+  const showGuide = () => {
+    // Reset the "has seen guide" flag
+    localStorage.removeItem('hasSeenGuide');
+    setOpen(true);
+  };
   
-  // Save that the user has seen the guide
   const closeGuide = () => {
     localStorage.setItem('hasSeenGuide', 'true');
     setOpen(false);
   };
   
-  // Reset the guide so it shows again on next visit
-  const resetGuide = () => {
-    localStorage.removeItem('hasSeenGuide');
-  };
-  
   return (
     <>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        id="guide-btn"
+        className="w-full flex items-center justify-center text-gray-700"
+        onClick={showGuide}
+      >
+        <HelpCircle size={16} className="mr-2" />
+        Show User Guide
+      </Button>
+      
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -80,7 +67,7 @@ export const UserGuide = () => {
                 <li><strong>Double-click</strong> on any note to open it in the editor</li>
                 <li><strong>Click</strong> on folders or labels to filter your notes</li>
                 <li>Use the <strong>floating action buttons</strong> at the bottom right to quickly create new notes or access the editor</li>
-                <li>Drag and drop notes to folders for easy organization</li>
+                <li>Use the folder dropdown when creating notes to organize them</li>
               </ul>
             </div>
             
@@ -149,7 +136,7 @@ export const UserGuide = () => {
                 <li>Use the star icon to <strong>pin</strong> important notes to the top</li>
                 <li><strong>Duplicate</strong> notes to create a copy with similar content</li>
                 <li>Use the <strong>search bar</strong> to quickly find notes by title or content</li>
-                <li>Drag and drop notes between folders for quick organization</li>
+                <li>Organize notes by selecting folders in the creation/edit dialog</li>
                 <li>Add multiple labels to a note for better categorization</li>
               </ul>
             </div>
@@ -165,19 +152,8 @@ export const UserGuide = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Button to reset the guide (only for development/testing) */}
-      {/* 
-      <Button 
-        variant="outline" 
-        className="fixed bottom-24 right-6 z-50"
-        onClick={resetGuide}
-      >
-        Show Guide
-      </Button>
-      */}
     </>
   );
 };
 
-export default UserGuide;
+export default UserGuideButton;

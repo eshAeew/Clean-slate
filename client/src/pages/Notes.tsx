@@ -60,7 +60,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import TaskManagerButton from "@/components/TaskManagerButton";
-import { openUserGuide } from "@/components/UserGuide";
+import UserGuideButton from "@/components/UserGuideButton";
 
 // Types matching our schema
 interface IFolder {
@@ -1054,7 +1054,10 @@ const NotesPage: React.FC = () => {
               variant="ghost"
               size="icon"
               className="ml-1"
-              onClick={() => openUserGuide()}
+              onClick={() => {
+                const guideBtn = document.getElementById('guide-btn');
+                if (guideBtn) guideBtn.click();
+              }}
               title="Help & Guide"
             >
               <HelpCircle size={16} className="text-gray-500" />
@@ -1245,16 +1248,8 @@ const NotesPage: React.FC = () => {
         </div>
         
         {/* Help button at the bottom of the sidebar */}
-        <div className="p-3 border-t border-gray-200">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full flex items-center justify-center text-gray-700"
-            onClick={openUserGuide}
-          >
-            <HelpCircle size={16} className="mr-2" />
-            Show User Guide
-          </Button>
+        <div className="p-3 border-t border-gray-200" id="guide-btn-container">
+          <UserGuideButton />
         </div>
       </div>
       
