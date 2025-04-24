@@ -49,6 +49,10 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     const boldRegex = /\*\*([^*]+)\*\*/g;
     const italicRegex = /\*([^*]+)\*/g;
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const strikethroughRegex = /~~([^~]+)~~/g;
+    const headingRegex = /^(#{1,3})\s+(.+)$/;
+    const codeRegex = /`([^`]+)`/g;
+    const codeBlockRegex = /```([^`]*)```/g;
     
     try {
       // Find all matches for bold text
@@ -76,6 +80,32 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
         
         // Log the detected link
         console.log('Link detected:', text, 'URL:', url);
+      }
+
+      // Find all strikethrough text
+      let strikethroughMatch;
+      while ((strikethroughMatch = strikethroughRegex.exec(lineContent)) !== null) {
+        console.log('Strikethrough text detected:', strikethroughMatch[1]);
+      }
+
+      // Find headings
+      const headingMatch = headingRegex.exec(lineContent);
+      if (headingMatch) {
+        const level = headingMatch[1].length; // number of # symbols
+        const headingText = headingMatch[2];
+        console.log(`Heading level ${level} detected:`, headingText);
+      }
+
+      // Find inline code
+      let codeMatch;
+      while ((codeMatch = codeRegex.exec(lineContent)) !== null) {
+        console.log('Inline code detected:', codeMatch[1]);
+      }
+
+      // Find code blocks
+      let codeBlockMatch;
+      while ((codeBlockMatch = codeBlockRegex.exec(lineContent)) !== null) {
+        console.log('Code block detected:', codeBlockMatch[1]);
       }
     } catch (error) {
       console.error('Error processing markdown styling:', error);
@@ -217,6 +247,30 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
       case 'italic':
         // Add * around the selected text for italic formatting
         editOperation(`*${selectedText}*`);
+        break;
+      case 'strikethrough':
+        // Add ~~ around the selected text for strikethrough formatting
+        editOperation(`~~${selectedText}~~`);
+        break;
+      case 'heading1':
+        // Add # for heading level 1
+        editOperation(`# ${selectedText}`);
+        break;
+      case 'heading2':
+        // Add ## for heading level 2
+        editOperation(`## ${selectedText}`);
+        break;
+      case 'heading3':
+        // Add ### for heading level 3
+        editOperation(`### ${selectedText}`);
+        break;
+      case 'code':
+        // Add ` around the selected text for inline code formatting
+        editOperation(`\`${selectedText}\``);
+        break;
+      case 'codeBlock':
+        // Add ``` around the selected text for code block formatting
+        editOperation(`\`\`\`\n${selectedText}\n\`\`\``);
         break;
       case 'addUrl':
         // Check if the value contains the URL, otherwise use a default placeholder

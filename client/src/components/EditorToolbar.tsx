@@ -5,11 +5,13 @@ import { Separator } from "@/components/ui/separator";
 import { 
   AlignLeft, AlignCenter, AlignRight,
   Indent, Outdent, List, ListOrdered, ChevronDown, ChevronUp,
-  Bold, Italic, Link
+  Bold, Italic, Link, Code, Heading1, Heading2, Heading3, 
+  Strikethrough
 } from "lucide-react";
 import { 
   Dialog, DialogContent, DialogHeader, 
-  DialogTitle, DialogFooter, DialogClose 
+  DialogTitle, DialogFooter, DialogClose,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -156,6 +158,70 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
+          
+          <Separator orientation="vertical" className="h-6 mx-1" />
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Strikethrough Text (~~text~~)" 
+            onClick={() => onFormat("strikethrough")}
+          >
+            <Strikethrough className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Inline Code (`code`)" 
+            onClick={() => onFormat("code")}
+          >
+            <Code className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Code Block (```code```)" 
+            onClick={() => onFormat("codeBlock")}
+          >
+            <span className="text-sm font-mono">```</span>
+          </Button>
+          
+          <Separator orientation="vertical" className="h-6 mx-1" />
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Heading 1 (# Heading)" 
+            onClick={() => onFormat("heading1")}
+          >
+            <Heading1 className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Heading 2 (## Heading)" 
+            onClick={() => onFormat("heading2")}
+          >
+            <Heading2 className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8" 
+            title="Heading 3 (### Heading)" 
+            onClick={() => onFormat("heading3")}
+          >
+            <Heading3 className="h-4 w-4" />
+          </Button>
         </div>
         
         {/* Font Settings */}
@@ -200,11 +266,11 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add URL Link</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4" id="url-link-dialog-description">
-            <p className="text-sm text-muted-foreground mb-2">
+            <DialogDescription>
               Enter the URL you want to link to the selected text.
-            </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Input 
                 id="url" 
