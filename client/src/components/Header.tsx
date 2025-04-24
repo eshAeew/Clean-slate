@@ -11,6 +11,7 @@ interface HeaderProps {
   onDownload: () => void;
   onSearch: (searchTerm: string) => void;
   onFormat: (action: string) => void;
+  title?: string; // Note title to display
 }
 
 const Header = ({ 
@@ -18,7 +19,8 @@ const Header = ({
   onNewFile, 
   onDownload, 
   onSearch,
-  onFormat 
+  onFormat,
+  title = 'SimpleNote' 
 }: HeaderProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -33,7 +35,7 @@ const Header = ({
         <div className="flex items-center space-x-6">
           {/* Logo and Title */}
           <div className="flex items-center">
-            <h1 className="app-title">SimpleNote</h1>
+            <h1 className="app-title">{title}</h1>
           </div>
           
           {/* File Operations */}

@@ -16,8 +16,8 @@ const NotepadEditor = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [editorOptions, setEditorOptions] = useState(DEFAULT_EDITOR_OPTIONS);
   
-  const [content, setContent] = useLocalStorage('notepad-content', 
-    `// Welcome to SimpleNote
+  // Initialize with localStorage note content or default
+  const defaultContent = `// Welcome to SimpleNote
 
 This is a clean, distraction-free text editor for all your note-taking needs.
 
@@ -34,8 +34,11 @@ function greet() {
   console.log("Hello, world!");
 }
 
-greet();`
-  );
+greet();`;
+
+  // Get stored note from the Notes page, if any
+  const [content, setContent] = useLocalStorage('notepad-content', defaultContent);
+  const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   
   const { 
     editorRef,
@@ -88,6 +91,28 @@ greet();`
     };
   }, []);
 
+  // Check for editing note from Notes page
+  useEffect(() => {
+    const editingNoteJson = localStorage.getItem('editingNote');
+    if (editingNoteJson) {
+      try {
+        const editingNote = JSON.parse(editingNoteJson);
+        if (editingNote && editingNote.content) {
+          setContent(editingNote.content);
+          setNoteTitle(editingNote.title || 'Untitled Note');
+          toast({
+            description: `Opened note: ${editingNote.title}`,
+            duration: 2000,
+          });
+          // Clear the editing note so refreshing doesn't re-open it
+          localStorage.removeItem('editingNote');
+        }
+      } catch (err) {
+        console.error('Error parsing editing note', err);
+      }
+    }
+  }, [toast, setContent]);
+
   // Auto-save notification
   useEffect(() => {
     const interval = setInterval(() => {
@@ -108,6 +133,7 @@ greet();`
         onDownload={() => setShowExportDialog(true)}
         onSearch={handleSearch}
         onFormat={handleFormat}
+        title={noteTitle}
       />
       
       <main className="flex-1 overflow-hidden flex p-3 bg-gray-50">
