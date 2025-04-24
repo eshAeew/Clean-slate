@@ -45,51 +45,40 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
     model: monacoEditor.ITextModel, 
     editor: monacoEditor.IStandaloneCodeEditor
   ) => {
-    // Regular expressions for finding markdown patterns
+    // Regular expressions for finding markdown patterns (simplified)
     const boldRegex = /\*\*([^*]+)\*\*/g;
-    const italicRegex = /(?<!\*)\*([^*]+)\*(?!\*)/g;
+    const italicRegex = /\*([^*]+)\*/g;
     const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
     
-    // Find all matches for bold text
-    let boldMatch;
-    while ((boldMatch = boldRegex.exec(lineContent)) !== null) {
-      const startPos = boldMatch.index;
-      const endPos = startPos + boldMatch[0].length;
-      const range = new monacoEditor.Range(
-        lineNumber,
-        startPos + 1, // +1 because Monaco positions are 1-based
-        lineNumber,
-        endPos + 1
-      );
+    try {
+      // Find all matches for bold text
+      let boldMatch;
+      while ((boldMatch = boldRegex.exec(lineContent)) !== null) {
+        // Log the detected pattern (in a production app, you would style this)
+        console.log('Bold text detected:', boldMatch[1]);
+      }
       
-      // Log the detected pattern (in a production app, you would style this)
-      console.log('Bold text detected:', boldMatch[1]);
-    }
-    
-    // Find all matches for italic text
-    let italicMatch;
-    while ((italicMatch = italicRegex.exec(lineContent)) !== null) {
-      const startPos = italicMatch.index;
-      const endPos = startPos + italicMatch[0].length;
-      const range = new monacoEditor.Range(
-        lineNumber,
-        startPos + 1,
-        lineNumber,
-        endPos + 1
-      );
+      // Find all matches for italic text (avoiding conflicts with bold)
+      // Only catch single asterisks that aren't part of double asterisks
+      if (!lineContent.includes('**')) {
+        let italicMatch;
+        while ((italicMatch = italicRegex.exec(lineContent)) !== null) {
+          // Log the detected pattern
+          console.log('Italic text detected:', italicMatch[1]);
+        }
+      }
       
-      // Log the detected pattern
-      console.log('Italic text detected:', italicMatch[1]);
-    }
-    
-    // Find all matches for links
-    let linkMatch;
-    while ((linkMatch = linkRegex.exec(lineContent)) !== null) {
-      const text = linkMatch[1];
-      const url = linkMatch[2];
-      
-      // Log the detected link
-      console.log('Link detected:', text, 'URL:', url);
+      // Find all matches for links
+      let linkMatch;
+      while ((linkMatch = linkRegex.exec(lineContent)) !== null) {
+        const text = linkMatch[1];
+        const url = linkMatch[2];
+        
+        // Log the detected link
+        console.log('Link detected:', text, 'URL:', url);
+      }
+    } catch (error) {
+      console.error('Error processing markdown styling:', error);
     }
   };
 
