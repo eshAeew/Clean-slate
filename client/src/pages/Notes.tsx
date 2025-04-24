@@ -180,6 +180,18 @@ const MOCK_NOTES: INote[] = [
   },
   { 
     id: 3, 
+    title: "Archived Note", 
+    content: "This is an archived note for testing the archive functionality.", 
+    folderId: null, 
+    isArchived: true, 
+    isTrashed: false, 
+    isPinned: false, 
+    createdAt: new Date().toISOString(), 
+    updatedAt: new Date().toISOString(),
+    labels: [MOCK_LABELS[0]] 
+  },
+  { 
+    id: 4, 
     title: "Project Ideas", 
     content: "1. Mobile app for task management\n2. Blog website redesign\n3. E-commerce platform", 
     folderId: 5, 
@@ -191,7 +203,7 @@ const MOCK_NOTES: INote[] = [
     labels: [MOCK_LABELS[2], MOCK_LABELS[3]] 
   },
   { 
-    id: 4, 
+    id: 5, 
     title: "Journal Entry", 
     content: "Today was productive. I completed the report and started planning for the upcoming presentation.", 
     folderId: 2, 
@@ -325,22 +337,44 @@ const NotesPage: React.FC = () => {
   
   // Filtered notes based on search, selected folder and label
   const filteredNotes = notes.filter(note => {
+    // First check if the note is trashed - we never show trashed notes
+    if (note.isTrashed) {
+      return false;
+    }
+    
+    // If we're in archive view, only show archived notes
+    if (viewArchived) {
+      if (!note.isArchived) {
+        return false;
+      }
+    } else {
+      // If we're in regular view, don't show archived notes
+      if (note.isArchived) {
+        return false;
+      }
+    }
+    
     // Filter by search
     const matchesSearch = searchTerm === "" || 
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       note.content.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) {
+      return false;
+    }
     
-    // Filter by folder if selected (only in regular view, not in archive view)
-    const matchesFolder = viewArchived || selectedFolder === null || note.folderId === selectedFolder;
+    // Filter by folder (only in regular view, we don't filter by folder in archive view)
+    if (!viewArchived && selectedFolder !== null && note.folderId !== selectedFolder) {
+      return false;
+    }
     
-    // Filter by label if selected
-    const matchesLabel = selectedLabel === null || 
-      (note.labels && note.labels.some(label => label.id === selectedLabel));
+    // Filter by label
+    if (selectedLabel !== null && 
+        (!note.labels || !note.labels.some(label => label.id === selectedLabel))) {
+      return false;
+    }
     
-    // Show archived notes only in archive view, and don't show trashed notes
-    const isVisible = !note.isTrashed && (viewArchived ? note.isArchived : !note.isArchived);
-    
-    return matchesSearch && matchesFolder && matchesLabel && isVisible;
+    // If it passed all filters, include it
+    return true;
   });
   
   // Function to toggle folder expansion
@@ -1125,6 +1159,14 @@ const NotesPage: React.FC = () => {
         
         {/* Notes list */}
         <div className="h-full p-4 overflow-auto">
+          {/* Debug information for development */}
+          <div className="mb-2 text-xs text-gray-500">
+            Archive mode: {viewArchived ? "Yes" : "No"} | 
+            Total notes: {notes.length} | 
+            Archived notes: {notes.filter(note => note.isArchived).length} | 
+            Filtered notes: {filteredNotes.length}
+          </div>
+          
           {/* Show pinned notes only in regular view, not in archive */}
           {!viewArchived && filteredNotes.some(note => note.isPinned) && (
             <div className="mb-6">
@@ -1146,7 +1188,7 @@ const NotesPage: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredNotes
-                .filter(note => !viewArchived || !note.isPinned) // In archive, show all notes as they can't be pinned
+                .filter(note => viewArchived || !note.isPinned) // In normal view, exclude pinned notes as they're shown above
                 .map(note => (
                   <DraggableNote key={note.id} note={note} />
                 ))}
