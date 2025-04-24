@@ -31,7 +31,7 @@ const Navigation = () => {
     <div className="fixed bottom-8 right-8 flex flex-col z-50">
       <Link href="/editor" onClick={handleNewNote} className="block relative">
         <div className="absolute inset-0 w-full h-full opacity-30 animate-pulse-ring"></div>
-        <StyledButton text="Take a Note" />
+        <StyledButton text="New Note" />
       </Link>
     </div>
   );
