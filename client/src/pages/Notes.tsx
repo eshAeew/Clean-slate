@@ -416,6 +416,21 @@ const NotesPage: React.FC = () => {
     }
   };
   
+  // Function to edit a folder
+  const editFolder = (folderId: number, newName: string) => {
+    setFolders(prevFolders => 
+      prevFolders.map(folder => 
+        folder.id === folderId 
+          ? { ...folder, name: newName, updatedAt: new Date().toISOString() } 
+          : folder
+      )
+    );
+    toast({ 
+      description: "Folder renamed",
+      duration: 2000
+    });
+  };
+  
   // Function to move note to trash
   const moveNoteToTrash = (noteId: number) => {
     setNotes(prevNotes => 
