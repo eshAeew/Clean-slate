@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -11,7 +11,7 @@ interface EditorToolbarProps {
   onFormat: (action: string, value?: any) => void;
 }
 
-// List of built-in fonts - must match the fonts in SettingsModal
+// List of built-in fonts
 const AVAILABLE_FONTS = [
   { name: "Consolas", value: "Consolas, Monaco, 'Courier New', monospace" },
   { name: "Monaco", value: "Monaco, Consolas, 'Courier New', monospace" },
@@ -21,7 +21,8 @@ const AVAILABLE_FONTS = [
   { name: "Fira Code", value: "'Fira Code', monospace" },
   { name: "JetBrains Mono", value: "'JetBrains Mono', monospace" },
   { name: "Source Code Pro", value: "'Source Code Pro', monospace" },
-  { name: "Georgia", value: "Georgia, 'Times New Roman', serif" }
+  { name: "Georgia", value: "Georgia, 'Times New Roman', serif" },
+  { name: "Times New Roman", value: "'Times New Roman', Times, serif" }
 ];
 
 interface CustomFont {
@@ -34,50 +35,88 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
   const [fontSize, setFontSize] = useState<number>(14);
   const [customFonts, setCustomFonts] = useState<CustomFont[]>([]);
   const [currentFont, setCurrentFont] = useState<string>(AVAILABLE_FONTS[0].value);
+  const [loadedFonts, setLoadedFonts] = useState(false);
+  
+  // Use ref to track if this is the initial render
+  const initialRender = useRef(true);
 
   // Load custom fonts from localStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('custom-fonts');
-      if (stored) {
-        setCustomFonts(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Error loading custom fonts:", e);
-    }
-
-    // Get the current editor options to initialize the fontSize
-    const editorOptions = localStorage.getItem('editor-options');
-    if (editorOptions) {
+    if (!loadedFonts) {
       try {
-        const options = JSON.parse(editorOptions);
-        if (options.fontSize) {
-          setFontSize(options.fontSize);
+        const stored = localStorage.getItem('custom-fonts');
+        if (stored) {
+          const fonts = JSON.parse(stored);
+          setCustomFonts(fonts);
+          
+          // Load the font styles into the document
+          fonts.forEach((font: CustomFont) => {
+            if (font.data) {
+              const style = document.createElement('style');
+              style.textContent = `
+                @font-face {
+                  font-family: "${font.name}";
+                  src: url(${font.data}) format('woff2');
+                }
+              `;
+              document.head.appendChild(style);
+            }
+          });
         }
-        if (options.fontFamily) {
-          setCurrentFont(options.fontFamily);
+      } catch (e) {
+        console.error("Error loading custom fonts:", e);
+      }
+      
+      // Get the current editor options to initialize the fontSize and font
+      try {
+        const editorOptions = localStorage.getItem('editor-options');
+        if (editorOptions) {
+          const options = JSON.parse(editorOptions);
+          if (options.fontSize) {
+            setFontSize(options.fontSize);
+          }
+          if (options.fontFamily) {
+            setCurrentFont(options.fontFamily);
+          }
         }
       } catch (e) {
         console.error("Error loading editor options:", e);
       }
+      
+      setLoadedFonts(true);
     }
-  }, []);
+  }, [loadedFonts, onFormat]);
+
+  // Save options to localStorage when they change
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    
+    try {
+      const storedOptions = localStorage.getItem('editor-options');
+      const options = storedOptions ? JSON.parse(storedOptions) : {};
+      options.fontSize = fontSize;
+      options.fontFamily = currentFont;
+      localStorage.setItem('editor-options', JSON.stringify(options));
+    } catch (e) {
+      console.error("Error saving editor options:", e);
+    }
+  }, [fontSize, currentFont]);
 
   // Handle font change
   const handleFontChange = (value: string) => {
+    console.log("Changing font to:", value);
     setCurrentFont(value);
     onFormat("fontFamily", value);
   };
 
-  const handleFontSizeChange = (value: string) => {
-    const size = parseInt(value);
-    setFontSize(size);
-    onFormat("fontSize", size);
-  };
-
+  // Handle font size change
   const decreaseFontSize = () => {
     if (fontSize > 10) {
       const newSize = fontSize - 1;
+      console.log("Decreasing font size to:", newSize);
       setFontSize(newSize);
       onFormat("fontSize", newSize);
     }
@@ -86,6 +125,7 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
   const increaseFontSize = () => {
     if (fontSize < 24) {
       const newSize = fontSize + 1;
+      console.log("Increasing font size to:", newSize);
       setFontSize(newSize);
       onFormat("fontSize", newSize);
     }
@@ -190,8 +230,8 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
             <SelectItem value="Georgia, 'Times New Roman', serif" style={{fontFamily: "Georgia, 'Times New Roman', serif"}}>Georgia</SelectItem>
             <SelectItem value="'Times New Roman', Times, serif" style={{fontFamily: "'Times New Roman', Times, serif"}}>Times New Roman</SelectItem>
             
-            {/* Custom fonts will be added here dynamically */}
-            {JSON.parse(localStorage.getItem('custom-fonts') || '[]').map((font: any) => (
+            {/* Custom fonts */}
+            {customFonts.map((font: CustomFont) => (
               <SelectItem key={font.name} value={font.value} style={{fontFamily: font.name}}>
                 {font.name}
               </SelectItem>
