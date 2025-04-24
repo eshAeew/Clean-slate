@@ -8,8 +8,18 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
   const editorRef = useRef<EditorRef>(null);
   const [stats, setStats] = useState(generateTextStats(initialContent));
 
+  // Update stats whenever initialContent changes (component remounts, etc.)
+  useEffect(() => {
+    updateStats(initialContent);
+  }, [initialContent]);
+
   const handleEditorDidMount = (editor: monacoEditor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
+    
+    // Add an event listener to update stats when content changes directly in the editor
+    editor.onDidChangeModelContent(() => {
+      updateStats(editor.getValue());
+    });
     
     // Update stats on initial mount
     updateStats(initialContent);

@@ -35,8 +35,8 @@ const NotepadEditor = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   
-  // Editor content state
-  const [content, setContent] = useState<string>('');
+  // Editor content state - initialize with a default welcome message
+  const [content, setContent] = useState<string>('Welcome to Modern Notepad!\n\nStart typing here to create your note...');
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   
   // State for the currently editing note
