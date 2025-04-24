@@ -318,7 +318,7 @@ greet();`;
     
     // Navigate back to notes page
     setTimeout(() => {
-      window.location.href = '/notes';
+      setLocation('/notes');
     }, 1000);
   }
 };

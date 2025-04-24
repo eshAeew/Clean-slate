@@ -195,9 +195,21 @@ type DialogType = 'folder' | 'note' | 'label' | null;
 const NotesPage: React.FC = () => {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  const [folders, setFolders] = useState<IFolder[]>(MOCK_FOLDERS);
-  const [notes, setNotes] = useState<INote[]>(MOCK_NOTES);
-  const [labels, setLabels] = useState<ILabel[]>(MOCK_LABELS);
+  // Load data from localStorage if available, otherwise use mock data
+  const [folders, setFolders] = useState<IFolder[]>(() => {
+    const savedFolders = localStorage.getItem('folders');
+    return savedFolders ? JSON.parse(savedFolders) : MOCK_FOLDERS;
+  });
+  
+  const [notes, setNotes] = useState<INote[]>(() => {
+    const savedNotes = localStorage.getItem('notes');
+    return savedNotes ? JSON.parse(savedNotes) : MOCK_NOTES;
+  });
+  
+  const [labels, setLabels] = useState<ILabel[]>(() => {
+    const savedLabels = localStorage.getItem('labels');
+    return savedLabels ? JSON.parse(savedLabels) : MOCK_LABELS;
+  });
   
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
   const [selectedNote, setSelectedNote] = useState<number | null>(null);
@@ -219,6 +231,19 @@ const NotesPage: React.FC = () => {
   
   // Drag and drop state
   const [activeItem, setActiveItem] = useState<any>(null);
+  
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('folders', JSON.stringify(folders));
+  }, [folders]);
+  
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }, [notes]);
+  
+  useEffect(() => {
+    localStorage.setItem('labels', JSON.stringify(labels));
+  }, [labels]);
   
   // Filtered notes based on search and selected folder
   const filteredNotes = notes.filter(note => {
@@ -638,6 +663,7 @@ const NotesPage: React.FC = () => {
                             selectedNote === note.id && "ring-2 ring-blue-500"
                           )}
                           onClick={() => setSelectedNote(note.id)}
+                          onDoubleClick={() => openNoteInEditor(note)}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="font-medium text-gray-900 truncate">{note.title}</h3>

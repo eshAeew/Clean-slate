@@ -3,7 +3,7 @@ import EditorToolbar from "./EditorToolbar";
 import Menu from "./Menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Settings } from "lucide-react";
+import { Search, Settings, Save } from "lucide-react";
 
 interface HeaderProps {
   onSettingsClick: () => void;
@@ -88,6 +88,16 @@ const Header = ({
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onFormat("save")} 
+            className="text-sm font-medium"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
           
           <Button variant="ghost" size="icon" onClick={onSettingsClick} title="Settings" className="app-icon-button">
             <Settings className="h-5 w-5" />
