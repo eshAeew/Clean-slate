@@ -63,10 +63,17 @@ greet();`
   };
 
   const updateEditorOptions = (options: typeof editorOptions) => {
+    console.log('Received editor options:', options);
+    // Update the editor options
     setEditorOptions({
       ...editorOptions,
       ...options
     });
+    
+    // Apply the lineHeight change to the editor if present
+    if (options.lineHeight && editorRef.current) {
+      handleFormat('lineHeight', options.lineHeight);
+    }
   };
 
   // Listen for fullscreen changes

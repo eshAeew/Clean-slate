@@ -40,13 +40,17 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
         break;
     }
 
-    onUpdateOptions({
+    // Pass the settings to the parent component
+    const options = {
       fontSize: settings.fontSize,
       wordWrap: settings.wordWrap ? 'on' : 'off',
       theme: settings.theme === 'dark' ? 'vs-dark' : 'vs',
       lineHeight: lineHeightValue,
       minimap: { enabled: false }
-    });
+    };
+    
+    console.log('Updating editor options:', options);
+    onUpdateOptions(options);
     onClose();
   };
 
