@@ -384,14 +384,36 @@ const NotesPage: React.FC = () => {
   
   // Function to delete a folder
   const deleteFolder = (folderId: number) => {
-    setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
-    // Also update notes that were in this folder
-    setNotes(prevNotes => 
-      prevNotes.map(note => 
-        note.folderId === folderId ? { ...note, folderId: null } : note
-      )
-    );
-    toast({ description: "Folder deleted" });
+    // First, check if folder has any notes
+    const hasNotes = notes.some(note => note.folderId === folderId);
+    
+    if (hasNotes) {
+      if (confirm("This folder contains notes. Deleting it will move all associated notes to the trash. Continue?")) {
+        // Move all notes in this folder to trash
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.folderId === folderId 
+              ? { ...note, isTrashed: true, updatedAt: new Date().toISOString() } 
+              : note
+          )
+        );
+        
+        // Remove the folder
+        setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
+        
+        toast({ 
+          description: "Folder deleted and notes moved to trash",
+          duration: 3000
+        });
+      }
+    } else {
+      // Just delete the folder as it has no notes
+      setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
+      toast({ 
+        description: "Folder deleted",
+        duration: 2000
+      });
+    }
   };
   
   // Function to move note to trash

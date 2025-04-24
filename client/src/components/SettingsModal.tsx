@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Upload, Plus, Info } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,7 +16,42 @@ interface SettingsModalProps {
   onUpdateOptions: (options: any) => void;
 }
 
+// List of built-in fonts 
+const AVAILABLE_FONTS = [
+  { name: "Consolas", value: "Consolas, Monaco, 'Courier New', monospace" },
+  { name: "Monaco", value: "Monaco, Consolas, 'Courier New', monospace" },
+  { name: "Courier New", value: "'Courier New', Courier, monospace" },
+  { name: "Roboto Mono", value: "'Roboto Mono', monospace" },
+  { name: "Fira Code", value: "'Fira Code', monospace" },
+  { name: "JetBrains Mono", value: "'JetBrains Mono', monospace" },
+  { name: "Source Code Pro", value: "'Source Code Pro', monospace" },
+  { name: "IBM Plex Mono", value: "'IBM Plex Mono', monospace" },
+  { name: "SF Mono", value: "'SF Mono', monospace" },
+  { name: "Menlo", value: "Menlo, monospace" },
+  { name: "Ubuntu Mono", value: "'Ubuntu Mono', monospace" },
+  { name: "Droid Sans Mono", value: "'Droid Sans Mono', monospace" },
+  { name: "Anonymous Pro", value: "'Anonymous Pro', monospace" },
+  { name: "Cascadia Code", value: "'Cascadia Code', monospace" },
+  { name: "Operator Mono", value: "'Operator Mono', monospace" }
+];
+
 const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: SettingsModalProps) => {
+  // Get stored custom fonts from localStorage
+  const getCustomFonts = () => {
+    try {
+      const stored = localStorage.getItem('custom-fonts');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Error loading custom fonts:", e);
+      return [];
+    }
+  };
+  
+  const [customFonts, setCustomFonts] = useState(getCustomFonts());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fontUploadAlert, setFontUploadAlert] = useState(false);
+  const [newFontName, setNewFontName] = useState("");
+  
   const [settings, setSettings] = useState({
     fontSize: editorOptions.fontSize,
     wordWrap: editorOptions.wordWrap === 'on',
@@ -21,7 +59,105 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
     lineHeight: editorOptions.lineHeight ? 
       (editorOptions.lineHeight >= 1.8 ? 'loose' : 
        editorOptions.lineHeight <= 1.3 ? 'tight' : 'normal') : 'normal',
+    fontFamily: editorOptions.fontFamily || AVAILABLE_FONTS[0].value,
     autoSave: true,
+  });
+
+  // Handle font file upload
+  const handleFontFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Only accept font files
+    if (!file.name.match(/\.(woff2?|ttf|otf)$/i)) {
+      alert("Please select a valid font file (.woff, .woff2, .ttf, or .otf)");
+      return;
+    }
+    
+    // Show dialog to name the font
+    setFontUploadAlert(true);
+    
+    // Read the font file
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        // Store the font data as a data URL
+        const fontData = event.target.result as string;
+        
+        // We'll use this when the user names the font
+        localStorage.setItem('temp-font-data', fontData);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Save the custom font with the provided name
+  const saveCustomFont = () => {
+    if (!newFontName.trim()) {
+      alert("Please provide a name for the font");
+      return;
+    }
+    
+    const fontData = localStorage.getItem('temp-font-data');
+    if (!fontData) return;
+    
+    // Create a new style element to load the font
+    const fontFace = `
+      @font-face {
+        font-family: "${newFontName}";
+        src: url(${fontData});
+        font-weight: normal;
+        font-style: normal;
+      }
+    `;
+    
+    // Add the font to the document
+    const styleEl = document.createElement('style');
+    styleEl.textContent = fontFace;
+    document.head.appendChild(styleEl);
+    
+    // Save to localStorage
+    const newFont = {
+      name: newFontName,
+      value: `"${newFontName}", monospace`,
+      data: fontData
+    };
+    
+    const updatedFonts = [...customFonts, newFont];
+    setCustomFonts(updatedFonts);
+    localStorage.setItem('custom-fonts', JSON.stringify(updatedFonts));
+    
+    // Clean up
+    localStorage.removeItem('temp-font-data');
+    setNewFontName("");
+    setFontUploadAlert(false);
+    
+    // Set the new font as the current font
+    setSettings({ ...settings, fontFamily: newFont.value });
+  };
+
+  // Load any previously saved custom fonts when the component mounts
+  const loadCustomFonts = () => {
+    customFonts.forEach(font => {
+      // Create style element for each custom font
+      const fontFace = `
+        @font-face {
+          font-family: "${font.name}";
+          src: url(${font.data});
+          font-weight: normal;
+          font-style: normal;
+        }
+      `;
+      
+      const styleEl = document.createElement('style');
+      styleEl.textContent = fontFace;
+      document.head.appendChild(styleEl);
+    });
+  };
+  
+  // Load custom fonts
+  useState(() => {
+    loadCustomFonts();
   });
 
   const handleSaveSettings = () => {
@@ -45,6 +181,7 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
       wordWrap: settings.wordWrap ? 'on' : 'off',
       theme: settings.theme === 'dark' ? 'vs-dark' : 'vs',
       lineHeight: lineHeightValue,
+      fontFamily: settings.fontFamily,
       minimap: { enabled: false }
     };
     
