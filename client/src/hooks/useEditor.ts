@@ -110,18 +110,6 @@ const useEditor = (initialContent: string, setContent: (content: string) => void
       case 'outdent':
         editor.trigger('keyboard', 'outdent', null);
         break;
-      case 'bold':
-        // Since we can't do real formatting, we'll surround with ** for bold (markdown style)
-        editOperation(`**${selectedText}**`);
-        break;
-      case 'italic':
-        // Surround with * for italic (markdown style)
-        editOperation(`*${selectedText}*`);
-        break;
-      case 'underline':
-        // Surround with _ for underline (alternative markdown style)
-        editOperation(`_${selectedText}_`);
-        break;
       case 'alignLeft':
         // Apply left alignment to the selected lines
         const leftAlignedText = selectedText.split('\n').map(line => line.trimStart()).join('\n');

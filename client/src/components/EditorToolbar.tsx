@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { 
-  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight,
   Indent, Outdent, List, ListOrdered, ChevronDown, ChevronUp
 } from "lucide-react";
 
@@ -37,38 +37,6 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
   return (
     <div className="bg-secondary border-b border-border px-4 py-1.5 flex items-center">
       <div className="flex space-x-2 text-sm">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
-          title="Bold (Ctrl+B)" 
-          onClick={() => onFormat("bold")}
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
-          title="Italic (Ctrl+I)" 
-          onClick={() => onFormat("italic")}
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
-          title="Underline (Ctrl+U)" 
-          onClick={() => onFormat("underline")}
-        >
-          <Underline className="h-4 w-4" />
-        </Button>
-        
-        <Separator orientation="vertical" className="h-6 mx-1" />
-        
         <Button 
           variant="ghost" 
           size="icon" 
