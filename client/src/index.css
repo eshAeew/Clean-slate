@@ -1,78 +1,104 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 221 83% 53%;
-  --accent-foreground: 24 9.8% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 20 14.3% 4.1%;
-  --radius: 0.5rem;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 12% 40%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 210 100% 50%;
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 210 100% 50%;
+  }
 }
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
-}
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply font-sans antialiased bg-secondary text-foreground;
-  }
-
-  .cm-editor, .monaco-editor {
-    @apply font-mono;
+    @apply bg-background text-foreground;
   }
 }
 
-.cm-editor {
-  height: 100%;
-  width: 100%;
+/* Updated UI for Apple-like Design */
+
+/* Header Styles */
+.app-header {
+  @apply bg-white text-gray-800 border-b border-gray-200 shadow-sm;
 }
 
-.cm-content {
-  padding: 16px !important;
-  font-family: Consolas, Monaco, 'Courier New', monospace;
+.app-title {
+  @apply text-lg font-medium text-gray-900;
 }
 
-.cm-editor.cm-focused {
-  outline: none !important;
+.app-menu-button {
+  @apply text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md text-sm font-medium px-3 py-2 transition-colors;
+}
+
+.app-icon-button {
+  @apply text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full;
+}
+
+/* Editor Styles */
+.editor-container {
+  @apply border border-gray-100 rounded-md shadow-sm overflow-hidden;
+}
+
+.editor-toolbar {
+  @apply bg-white border-b border-gray-100 shadow-sm;
+}
+
+/* Button Styles */
+.apple-button {
+  @apply bg-white border border-gray-200 rounded-full px-4 py-1.5 text-sm font-medium text-gray-800 
+  hover:bg-gray-50 shadow-sm active:bg-gray-100 transition-colors;
+}
+
+.apple-button-primary {
+  @apply bg-blue-500 border-blue-500 text-white hover:bg-blue-600 active:bg-blue-700;
+}
+
+/* Dialog Styles */
+.apple-dialog {
+  @apply bg-white rounded-lg shadow-xl border border-gray-200;
 }
 
 /* For Monaco Editor */

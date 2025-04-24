@@ -35,12 +35,12 @@ const EditorToolbar = ({ onFormat }: EditorToolbarProps) => {
   };
 
   return (
-    <div className="bg-secondary border-b border-border px-4 py-1.5 flex items-center">
-      <div className="flex space-x-2 text-sm">
+    <div className="editor-toolbar px-6 py-2 flex items-center">
+      <div className="flex space-x-3 text-sm">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8" 
+          className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100" 
           title="Align Left" 
           onClick={() => onFormat("alignLeft")}
         >

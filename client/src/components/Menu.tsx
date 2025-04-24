@@ -27,7 +27,7 @@ const Menu = ({ title, items }: MenuProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="px-2 py-1 h-auto text-sm">
+        <Button variant="ghost" className="app-menu-button font-medium">
           {title}
         </Button>
       </DropdownMenuTrigger>

@@ -24,10 +24,25 @@ const SettingsModal = ({ isOpen, onClose, editorOptions, onUpdateOptions }: Sett
   });
 
   const handleSaveSettings = () => {
+    // Convert line height string to numeric value
+    let lineHeightValue = 1.5;
+    switch (settings.lineHeight) {
+      case 'tight':
+        lineHeightValue = 1.2;
+        break;
+      case 'normal':
+        lineHeightValue = 1.6;
+        break;
+      case 'loose':
+        lineHeightValue = 2.0;
+        break;
+    }
+
     onUpdateOptions({
       fontSize: settings.fontSize,
       wordWrap: settings.wordWrap ? 'on' : 'off',
       theme: settings.theme === 'dark' ? 'vs-dark' : 'vs',
+      lineHeight: lineHeightValue,
       minimap: { enabled: false }
     });
     onClose();

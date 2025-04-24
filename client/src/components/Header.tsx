@@ -28,17 +28,16 @@ const Header = ({
   };
 
   return (
-    <header className="bg-primary border-b border-border">
-      <div className="flex items-center justify-between px-4 py-2">
-        <div className="flex items-center space-x-4">
+    <header className="app-header">
+      <div className="flex items-center justify-between px-6 py-3">
+        <div className="flex items-center space-x-6">
           {/* Logo and Title */}
           <div className="flex items-center">
-            <i className="ri-file-text-line text-accent text-xl mr-2"></i>
-            <h1 className="text-lg font-medium">SimpleNote</h1>
+            <h1 className="app-title">SimpleNote</h1>
           </div>
           
           {/* File Operations */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
             <Menu 
               title="File"
               items={[
@@ -67,12 +66,6 @@ const Header = ({
               title="View"
               items={[
                 { 
-                  label: "Status Bar", 
-                  icon: "ri-eye-line", 
-                  onClick: () => {}, 
-                  checked: true 
-                },
-                { 
                   label: "Word Wrap", 
                   icon: "ri-text-wrap", 
                   onClick: () => onFormat("toggleWordWrap") 
@@ -83,19 +76,19 @@ const Header = ({
         </div>
         
         {/* Search and User Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           <div className="relative">
             <Input
               type="search"
               placeholder="Search in text..."
-              className="pl-8 pr-2 py-1 text-sm w-56"
+              className="pl-8 pr-2 py-1.5 text-sm w-56 rounded-full border-gray-200 bg-gray-50 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               value={searchTerm}
               onChange={handleSearchChange}
             />
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
           
-          <Button variant="ghost" size="icon" onClick={onSettingsClick} title="Settings">
+          <Button variant="ghost" size="icon" onClick={onSettingsClick} title="Settings" className="app-icon-button">
             <Settings className="h-5 w-5" />
           </Button>
         </div>
