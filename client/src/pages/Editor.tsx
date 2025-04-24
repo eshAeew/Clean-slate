@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import Editor from '@monaco-editor/react';
 import { useToast } from '@/hooks/use-toast';
@@ -10,8 +10,19 @@ import ExportDialog from '@/components/ExportDialog';
 import Header from '@/components/Header';
 import { 
   Dialog, DialogContent, DialogDescription, 
-  DialogHeader, DialogTitle, DialogFooter 
+  DialogHeader, DialogTitle, DialogFooter,
+  DialogClose
 } from '@/components/ui/dialog';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -38,6 +49,10 @@ const NotepadEditor = () => {
   // Editor content state - initialize with a default welcome message
   const [content, setContent] = useState<string>('Welcome to Modern Notepad!\n\nStart typing here to create your note...');
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
+  const [originalContent, setOriginalContent] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   
   // State for the currently editing note
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
@@ -162,6 +177,44 @@ const NotepadEditor = () => {
     }
   }, [toast]);
 
+  // Check for unsaved changes
+  useEffect(() => {
+    if (content !== originalContent) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [content, originalContent]);
+  
+  // Set original content when loading a note
+  useEffect(() => {
+    if (editorRef.current) {
+      setOriginalContent(editorRef.current.getValue());
+    }
+  }, [editorRef.current]);
+
+  // Handle navigation with unsaved changes
+  const handleNavigation = useCallback((path: string) => {
+    if (hasUnsavedChanges) {
+      // Show confirmation dialog
+      setPendingNavigation(path);
+      setShowUnsavedDialog(true);
+    } else {
+      // Navigate directly if no unsaved changes
+      setLocation(path);
+    }
+  }, [hasUnsavedChanges, setLocation]);
+
+  // Navigate without saving
+  const discardChangesAndNavigate = () => {
+    if (pendingNavigation) {
+      setShowUnsavedDialog(false);
+      setHasUnsavedChanges(false);
+      setLocation(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
   // Function to handle saving a note
   const handleSaveNote = () => {
     const currentContent = editorRef.current?.getValue() || content;
@@ -210,14 +263,29 @@ const NotepadEditor = () => {
     setSaveDialogOpen(false);
     setSaveAsNew(false);
     
-    // Update state
+    // Update states
     setEditingNoteId(saveAsNew ? savedNote.id : editingNoteId);
     setNoteTitle(savedNote.title);
+    setOriginalContent(currentContent);
+    setHasUnsavedChanges(false);
     
-    // Navigate back to notes page
-    setTimeout(() => {
-      setLocation('/notes');
-    }, 1000);
+    // If we're navigating after saving
+    if (pendingNavigation) {
+      setShowUnsavedDialog(false);
+      setLocation(pendingNavigation);
+      setPendingNavigation(null);
+    } else {
+      // Navigate back to notes page if not part of a prompt
+      setTimeout(() => {
+        setLocation('/notes');
+      }, 1000);
+    }
+  };
+
+  // Function to save and then navigate
+  const saveAndNavigate = () => {
+    // First open the save dialog
+    setSaveDialogOpen(true);
   };
 
   return (
@@ -253,6 +321,14 @@ const NotepadEditor = () => {
         </div>
       </main>
 
+      {/* Back to Notes button with unsaved changes check */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
+        <Button size="icon" className="rounded-full h-12 w-12 bg-green-600 hover:bg-green-700 shadow-lg"
+          onClick={() => handleNavigation('/notes')}>
+          <i className="ri-arrow-left-line h-6 w-6 text-white"></i>
+        </Button>
+      </div>
+
       {showSettings && (
         <SettingsModal 
           isOpen={showSettings}
@@ -267,6 +343,26 @@ const NotepadEditor = () => {
         onClose={() => setShowExportDialog(false)}
         onExport={(fileType) => downloadContent(fileType)}
       />
+
+      {/* Unsaved Changes Dialog */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Do you want to save them before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={discardChangesAndNavigate}>
+              Don't Save
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={saveAndNavigate}>
+              Save
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Save Note Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>

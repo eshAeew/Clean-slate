@@ -1,4 +1,4 @@
-import { Switch, Route, Link } from "wouter";
+import { Switch, Route, Link, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,16 +13,28 @@ import { Edit, FileText } from "lucide-react";
 
 // Navigation component
 const Navigation = () => {
+  const [location] = useLocation();
+  
+  // If we're in the editor, don't show the navigation buttons as they're handled by the editor page
+  if (location === '/editor') {
+    return null;
+  }
+  
+  // Handler for the "New Note" button
+  const handleNewNote = () => {
+    // Clear any existing editing note data
+    localStorage.removeItem('editingNote');
+  };
+  
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
-      <Link href="/editor">
-        <Button size="icon" className="rounded-full h-12 w-12 bg-blue-600 hover:bg-blue-700 shadow-lg">
+      <Link href="/editor" onClick={handleNewNote}>
+        <Button 
+          size="icon" 
+          className="rounded-full h-12 w-12 bg-blue-600 hover:bg-blue-700 shadow-lg"
+          title="Create new note"
+        >
           <Edit className="h-6 w-6" />
-        </Button>
-      </Link>
-      <Link href="/notes">
-        <Button size="icon" className="rounded-full h-12 w-12 bg-green-600 hover:bg-green-700 shadow-lg">
-          <FileText className="h-6 w-6" />
         </Button>
       </Link>
     </div>
