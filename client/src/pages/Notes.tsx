@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import TaskManagerButton from "@/components/TaskManagerButton";
 
 // Types matching our schema
 interface IFolder {
@@ -1157,16 +1158,9 @@ const NotesPage: React.FC = () => {
               <p className="text-sm text-gray-500 mt-1">Archived notes are stored here. Restore them to make them active again.</p>
             )}
           </div>
-          <button 
-            className="mt-3 sm:mt-0 ui-btn"
-            onClick={() => {
-              window.location.href = "https://pro-taskmanager.netlify.app";
-            }}
-          >
-            <span>
-              Task Manager
-            </span>
-          </button>
+          <div className="mt-3 sm:mt-0">
+            <TaskManagerButton />
+          </div>
         </div>
         
         {/* Notes list */}
